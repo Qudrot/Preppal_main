@@ -4,6 +4,7 @@ import 'package:prepal2/presentation/providers/auth_provider.dart';
 import 'package:prepal2/presentation/providers/business_provider.dart';
 import 'package:prepal2/presentation/screens/auth/business_details_screen.dart';
 import 'package:prepal2/presentation/screens/main_shell.dart';
+import 'package:prepal2/core/constants/app_colors.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -112,26 +113,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         onChanged: (_) => authProvider.clearError(),
-  InputDecoration _inputDecoration(String hint) => InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: AppColors.gray),
-        filled: true,
-        fillColor: AppColors.lightGray.withOpacity(0.2), // Light gray background
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.gray.withOpacity(0.5)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.gray.withOpacity(0.5)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.secondary, width: 1.5),
-        ),
-      );
+                        decoration: _inputDecoration('Email address'),
                         validator: (v) =>
-                            v == null || v.isEmpty ? 'Please enter your password' : null,
+                            v == null || v.isEmpty ? 'Please enter your email address' : null,
                       ),
 
                       const SizedBox(height: 12),

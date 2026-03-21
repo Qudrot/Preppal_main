@@ -167,7 +167,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                       final alert = filteredAlerts[index];
                       return _AlertCard(
                         alert: alert,
-                        alertColor: _getAlertColor(alert['type']),
+                        alertColor: _getAlertColor(alert.severity),
                       );
                     },
                   ),
