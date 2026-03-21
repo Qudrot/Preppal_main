@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:prepal2/presentation/providers/business_provider.dart';
 import 'package:prepal2/presentation/screens/main_shell.dart';
+import 'package:prepal2/core/constants/app_colors.dart';
+import 'package:prepal2/presentation/widgets/shared_button.dart';
 
 class BusinessDetailsScreen extends StatefulWidget {
   const BusinessDetailsScreen({super.key});
@@ -89,16 +91,16 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Progress bar
+                // Progress bar (3 steps total)
                 Row(
-                  children: List.generate(4, (i) => Expanded(
+                  children: List.generate(3, (i) => Expanded(
                     child: Container(
                       height: 6,
-                      margin: EdgeInsets.only(right: i < 3 ? 8 : 0),
+                      margin: EdgeInsets.only(right: i < 2 ? 8 : 0),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(3),
-                        color: i <= 2
-                            ? const Color(0xFFD35A2A)
+                        color: i <= 2 // All 3 steps are complete/active now
+                            ? const Color(0xFFD35A2A) // TODO: use AppColors.secondary eventually
                             : const Color(0xFFE8DEF8),
                       ),
                     ),
@@ -224,56 +226,19 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: ElevatedButton(
-                        onPressed:
-                            provider.isLoading ? null : () => _submit(navigateAfter: false),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFF3CDD3),
-                          foregroundColor: const Color(0xFF5A3A3A),
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: provider.isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  color: Color(0xFF5A3A3A),
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text('Save',
-                                style: TextStyle(fontWeight: FontWeight.w600)),
+                      child: PrimaryButton(
+                        text: 'Save',
+                        type: ButtonType.tertiary,
+                        onPressed: () => _submit(navigateAfter: false),
+                        isLoading: provider.isLoading,
                       ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: ElevatedButton(
-                        onPressed:
-                            provider.isLoading ? null : () => _submit(navigateAfter: true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFD35A2A),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: provider.isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text('Next',
-                                style: TextStyle(fontWeight: FontWeight.w600)),
+                      child: PrimaryButton(
+                        text: 'Next',
+                        onPressed: () => _submit(navigateAfter: true),
+                        isLoading: provider.isLoading,
                       ),
                     ),
                   ],
@@ -292,8 +257,8 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
       text,
       style: const TextStyle(
         fontSize: 14,
-        fontWeight: FontWeight.w500,
-        color: Colors.black,
+        fontWeight: FontWeight.w600,
+        color: AppColors.black,
       ),
     );
   }
@@ -301,20 +266,20 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Color(0xFFBDBDBD)),
+      hintStyle: const TextStyle(color: AppColors.gray),
       filled: true,
-      fillColor: const Color(0xFFE8DEF8),
+      fillColor: AppColors.white,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: AppColors.gray),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: AppColors.gray),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: AppColors.secondary, width: 1.5),
       ),
     );
   }

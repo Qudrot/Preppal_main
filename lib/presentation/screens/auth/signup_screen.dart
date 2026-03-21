@@ -3,7 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:prepal2/presentation/providers/auth_provider.dart';
-import 'package:prepal2/presentation/screens/auth/verification_screen.dart';
+import 'package:prepal2/presentation/screens/auth/business_details_screen.dart';
+import 'package:prepal2/core/constants/app_colors.dart';
+import 'package:prepal2/presentation/widgets/shared_button.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -54,9 +56,7 @@ class _SignupScreenState extends State<SignupScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => VerificationScreen(
-            email: _emailController.text.trim(),
-          ),
+          builder: (_) => const BusinessDetailsScreen(),
         ),
       );
     }
@@ -135,33 +135,16 @@ class _SignupScreenState extends State<SignupScreen> {
                           const Text(
                             'Username',
                             style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.black,
                             ),
                           ),
                           const SizedBox(height: 8),
                           TextFormField(
                             controller: _usernameController,
                             onChanged: (_) => authProvider.clearError(),
-                            decoration: InputDecoration(
-                              hintText: 'deliciousness2027',
-                              hintStyle: const TextStyle(color: Color(0xFFBDBDBD)),
-                              filled: true,
-                              fillColor: const Color(0xFFE8DEF8),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
+                            decoration: _inputDecoration('deliciousness2027'),
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
                                 return 'Username required';
@@ -189,9 +172,9 @@ class _SignupScreenState extends State<SignupScreen> {
                           const Text(
                             'Email address',
                             style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.black,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -199,24 +182,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
                             onChanged: (_) => authProvider.clearError(),
-                            decoration: InputDecoration(
-                              hintText: 'deliciousness@egg.ic',
-                              hintStyle: const TextStyle(color: Color(0xFFBDBDBD)),
-                              filled: true,
-                              fillColor: const Color(0xFFE8DEF8),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
+                            decoration: _inputDecoration('deliciousness@egg.ic'),
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
                                 return 'Email required';
@@ -244,9 +210,9 @@ class _SignupScreenState extends State<SignupScreen> {
                     const Text(
                       'Create password',
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.black,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -254,29 +220,13 @@ class _SignupScreenState extends State<SignupScreen> {
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       onChanged: (_) => authProvider.clearError(),
-                      decoration: InputDecoration(
-                        hintText: '••••••••',
-                        hintStyle: const TextStyle(color: Color(0xFFBDBDBD)),
-                        filled: true,
-                        fillColor: const Color(0xFFE8DEF8),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
+                      decoration: _inputDecoration('••••••••').copyWith(
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword
                                 ? Icons.visibility_off
                                 : Icons.visibility,
-                            color: Colors.grey,
+                            color: AppColors.gray,
                           ),
                           onPressed: () {
                             setState(() => _obscurePassword = !_obscurePassword);
@@ -311,9 +261,9 @@ class _SignupScreenState extends State<SignupScreen> {
                     const Text(
                       'Retype password',
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.black,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -321,29 +271,13 @@ class _SignupScreenState extends State<SignupScreen> {
                       controller: _confirmPasswordController,
                       obscureText: _obscureConfirmPassword,
                       onChanged: (_) => authProvider.clearError(),
-                      decoration: InputDecoration(
-                        hintText: '••••••••',
-                        hintStyle: const TextStyle(color: Color(0xFFBDBDBD)),
-                        filled: true,
-                        fillColor: const Color(0xFFE8DEF8),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
+                      decoration: _inputDecoration('••••••••').copyWith(
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscureConfirmPassword
                                 ? Icons.visibility_off
                                 : Icons.visibility,
-                            color: Colors.grey,
+                            color: AppColors.gray,
                           ),
                           onPressed: () {
                             setState(() => _obscureConfirmPassword =
@@ -384,36 +318,10 @@ class _SignupScreenState extends State<SignupScreen> {
                 const SizedBox(height: 24),
 
                 // Next button
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: authProvider.isLoading ? null : _handleSignup,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFD35A2A),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: authProvider.isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : const Text(
-                            'Next',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                  ),
+                PrimaryButton(
+                  text: 'Next',
+                  onPressed: _handleSignup,
+                  isLoading: authProvider.isLoading,
                 ),
 
                 const SizedBox(height: 32),
@@ -428,4 +336,23 @@ class _SignupScreenState extends State<SignupScreen> {
       ),
     );
   }
+
+  InputDecoration _inputDecoration(String hint) => InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(color: AppColors.gray),
+        filled: true,
+        fillColor: AppColors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.gray),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.gray),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.secondary, width: 1.5),
+        ),
+      );
 }

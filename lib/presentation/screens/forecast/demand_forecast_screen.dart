@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:prepal2/presentation/providers/forecast_provider.dart';
+import 'package:prepal2/core/constants/app_colors.dart';
 
 class DemandForecastScreen extends StatefulWidget {
   const DemandForecastScreen({super.key});
@@ -26,7 +27,7 @@ class _DemandForecastScreenState extends State<DemandForecastScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFD32F2F),
+        backgroundColor: AppColors.secondary,
         elevation: 0,
         title: const Text('Demand Forecast', style: TextStyle(color: Colors.white)),
         centerTitle: true,
@@ -41,7 +42,7 @@ class _DemandForecastScreenState extends State<DemandForecastScreen> {
       body: forecastProvider.isLoading
         ? const Center(
             child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD32F2F)),
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.secondary),
             ),
           )
         : forecastProvider.forecastData == null
@@ -69,7 +70,7 @@ class _DemandForecastScreenState extends State<DemandForecastScreen> {
                   children: [
                     // Header section with subtitle
                     Container(
-                      color: const Color(0xFFD32F2F),
+                      color: AppColors.secondary,
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,7 +134,7 @@ class _DemandForecastScreenState extends State<DemandForecastScreen> {
                                     width: 12,
                                     height: 12,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFD32F2F),
+                                      color: AppColors.secondary,
                                       borderRadius: BorderRadius.circular(2),
                                     ),
                                   ),
@@ -154,7 +155,7 @@ class _DemandForecastScreenState extends State<DemandForecastScreen> {
                                     width: 12,
                                     height: 12,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFFFC107),
+                                      color: AppColors.accent,
                                       borderRadius: BorderRadius.circular(2),
                                     ),
                                   ),
@@ -221,7 +222,7 @@ class _DemandForecastScreenState extends State<DemandForecastScreen> {
                           ),
                           const Icon(
                             Icons.trending_up,
-                            color: Color(0xFFD32F2F),
+                            color: AppColors.secondary,
                             size: 48,
                           ),
                         ],
@@ -244,7 +245,7 @@ class _DemandForecastScreenState extends State<DemandForecastScreen> {
                         children: [
                           const Icon(
                             Icons.lightbulb_outline,
-                            color: Color(0xFFFFC107),
+                            color: AppColors.accent,
                             size: 20,
                           ),
                           const SizedBox(width: 12),
@@ -421,7 +422,7 @@ class _ProductForecastCard extends StatelessWidget {
                         minHeight: 6,
                         backgroundColor: Colors.grey[200],
                         valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFFD32F2F),
+                          AppColors.secondary,
                         ),
                       ),
                     ),
@@ -466,7 +467,7 @@ class _ProductForecastCard extends StatelessWidget {
                         minHeight: 6,
                         backgroundColor: Colors.grey[200],
                         valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFF4CAF50),
+                          AppColors.primary,
                         ),
                       ),
                     ),
@@ -514,21 +515,21 @@ class _LineChartPainter extends CustomPainter {
     }
 
     final paintLine1 = Paint()
-      ..color = const Color(0xFFD32F2F)
+      ..color = AppColors.secondary
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
     final paintLine2 = Paint()
-      ..color = const Color(0xFFFFC107)
+      ..color = AppColors.accent
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
     final paintDots1 = Paint()
-      ..color = const Color(0xFFD32F2F)
+      ..color = AppColors.secondary
       ..style = PaintingStyle.fill;
       
     final paintDots2 = Paint()
-      ..color = const Color(0xFFFFC107)
+      ..color = AppColors.accent
       ..style = PaintingStyle.fill;
 
     final path1 = Path();

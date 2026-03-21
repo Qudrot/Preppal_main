@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:prepal2/presentation/providers/daily_sales_provider.dart';
 import 'package:prepal2/presentation/providers/dashboard_provider.dart';
 import 'package:prepal2/presentation/providers/forecast_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+// Core
+import 'package:prepal2/core/constants/app_colors.dart';
+import 'package:prepal2/core/di/service_locator.dart';
 
 // Core
 import 'package:prepal2/core/di/service_locator.dart';
@@ -98,28 +103,47 @@ class PrepPalApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFD32F2F),
-          primary: const Color(0xFFD32F2F),
+          seedColor: AppColors.primary,
+          primary: AppColors.primary,
+          secondary: AppColors.secondary,
         ),
         useMaterial3: true,
-        fontFamily: 'Roboto',
+        fontFamily: GoogleFonts.alansans().fontFamily,
+        textTheme: TextTheme(
+          displayLarge: GoogleFonts.palanquin(fontSize: 48, fontWeight: FontWeight.bold),
+          displayMedium: GoogleFonts.palanquin(fontSize: 40, fontWeight: FontWeight.bold),
+          displaySmall: GoogleFonts.palanquin(fontSize: 33, fontWeight: FontWeight.bold),
+          headlineLarge: GoogleFonts.palanquin(fontSize: 28, fontWeight: FontWeight.bold),
+          headlineMedium: GoogleFonts.palanquin(fontSize: 23, fontWeight: FontWeight.bold),
+          headlineSmall: GoogleFonts.palanquin(fontSize: 19, fontWeight: FontWeight.bold),
+          titleLarge: GoogleFonts.alansans(fontSize: 16, fontWeight: FontWeight.w600),
+          titleMedium: GoogleFonts.alansans(fontSize: 13, fontWeight: FontWeight.w500),
+          titleSmall: GoogleFonts.alansans(fontSize: 11, fontWeight: FontWeight.w500),
+          bodyLarge: GoogleFonts.alansans(fontSize: 16),
+          bodyMedium: GoogleFonts.alansans(fontSize: 13),
+          bodySmall: GoogleFonts.alansans(fontSize: 11),
+        ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: Colors.grey.shade100,
+          fillColor: AppColors.lightGray.withOpacity(0.2),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide.none,
+            borderSide: BorderSide(color: AppColors.gray.withOpacity(0.5)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: AppColors.gray.withOpacity(0.5)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Color(0xFFD32F2F), width: 1.5),
+            borderSide: const BorderSide(color: AppColors.secondary, width: 1.5),
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFD32F2F),
-            foregroundColor: Colors.white,
+            backgroundColor: AppColors.secondary,
+            foregroundColor: AppColors.white,
             minimumSize: const Size(double.infinity, 48),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),

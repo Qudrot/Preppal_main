@@ -3,8 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:prepal2/presentation/providers/business_provider.dart';
 import 'package:prepal2/presentation/providers/inventory_provider.dart';
 import 'package:prepal2/presentation/providers/daily_sales_provider.dart';
+import 'package:prepal2/core/constants/app_colors.dart';
 import 'package:prepal2/presentation/screens/dashboard/dashboard_screen.dart';
-import 'package:prepal2/presentation/screens/forecast/forecast_screen.dart';
+import 'package:prepal2/presentation/screens/forecast/demand_forecast_screen.dart';
 import 'package:prepal2/presentation/screens/inventory/inventory_list_screen.dart';
 import 'package:prepal2/presentation/screens/alerts/alerts_screen.dart';
 
@@ -20,7 +21,7 @@ class _MainShellState extends State<MainShell> {
 
   final List<Widget> _screens = [
     const DashboardScreen(),
-    const ForecastScreen(),
+    const DemandForecastScreen(),
     const InventoryListScreen(),
     const AlertsScreen(),
   ];
@@ -57,7 +58,7 @@ class _MainShellState extends State<MainShell> {
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFFD32F2F),
+        selectedItemColor: AppColors.secondary,
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(

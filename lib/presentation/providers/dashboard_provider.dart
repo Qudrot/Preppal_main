@@ -134,7 +134,7 @@ class DashboardProvider extends ChangeNotifier {
       }).length;
 
   // ── Daily Alerts ────────────────────────────────────────────
-  List<DashboardAlert> get dailyAlerts {
+  List<DashboardAlert> get allAlerts {
     final alerts = <DashboardAlert>[];
 
     for (final p in _products) {
@@ -154,7 +154,7 @@ class DashboardProvider extends ChangeNotifier {
         final needed = (p.effectiveThreshold - p.quantityAvailable).ceil();
         alerts.add(DashboardAlert(
           productName: p.name,
-          message: 'Prepare $needed ${p.unit.name} more',
+          message: 'Prepare $needed ${p.unit.name.toUpperCase()} more',
           severity: 'Medium',
         ));
       } else if (p.isExpiringSoon) {
@@ -168,8 +168,10 @@ class DashboardProvider extends ChangeNotifier {
 
     alerts.sort(
         (a, b) => _rank(a.severity).compareTo(_rank(b.severity)));
-    return alerts.take(5).toList();
+    return alerts;
   }
+
+  List<DashboardAlert> get dailyAlerts => allAlerts.take(5).toList();
 
   // ── Smart Recommendations ────────────────────────────────────
   List<DashboardRecommendation> get smartRecommendations {

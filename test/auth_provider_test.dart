@@ -33,13 +33,6 @@ class _FakeAuthRepository implements AuthRepository {
 
 class _FakeRemote implements AuthRemoteDataSource {
   bool called = false;
-  String? lastOtp;
-
-  @override
-  Future<void> verifyEmail({required String otp}) async {
-    called = true;
-    lastOtp = otp;
-  }
 
   // all other methods are unused in these tests
   @override
@@ -49,11 +42,6 @@ class _FakeRemote implements AuthRemoteDataSource {
 
   @override
   Future<String> login({required String email, required String password}) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> resendVerificationEmail(String email) {
     throw UnimplementedError();
   }
 
@@ -85,19 +73,7 @@ void main() {
     serviceLocator.authRemoteDataSourceForTest = fakeRemote;
   });
 
-  test('verifyEmail fails when OTP is wrong length and does not call API', () async {
-    final result = await provider.verifyEmail(otp: '12');
-    expect(result, isFalse);
-    expect(provider.errorMessage, contains('4 digits'));
-    expect(provider.status, AuthStatus.error);
-    expect(fakeRemote.called, isFalse);
-  });
-
-  test('verifyEmail forwards call when OTP length is exactly 4', () async {
-    final result = await provider.verifyEmail(otp: '1234');
-    expect(result, isTrue);
-    expect(provider.status, AuthStatus.authenticated);
-    expect(fakeRemote.called, isTrue);
-    expect(fakeRemote.lastOtp, '1234');
+  test('auth provider initializes with correct status', () {
+    expect(provider.status, AuthStatus.loading);
   });
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:prepal2/presentation/providers/forecast_provider.dart';
 import 'package:prepal2/presentation/providers/auth_provider.dart';
 import 'package:prepal2/presentation/providers/business_provider.dart';
 import 'package:prepal2/presentation/providers/dashboard_provider.dart';
@@ -8,6 +9,7 @@ import 'package:prepal2/presentation/providers/daily_sales_provider.dart';
 import 'package:prepal2/presentation/screens/sales/daily_sales_report_screen.dart';
 import 'package:prepal2/presentation/screens/forecast/demand_forecast_screen.dart';
 import 'package:prepal2/presentation/screens/splash/splash_screen.dart';
+import 'package:prepal2/core/constants/app_colors.dart';
 
 // Changed to StatefulWidget so we can call loadSales() on init
 class DashboardScreen extends StatefulWidget {
@@ -33,6 +35,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (business != null && business.id.isNotEmpty) {
         await dashboard.loadSales(business.id);
       }
+      context.read<ForecastProvider>().loadForecastData();
     });
   }
 
@@ -41,6 +44,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final business = context.watch<BusinessProvider>().currentBusiness;
     final inventory = context.watch<InventoryProvider>();
     final dashboard = context.watch<DashboardProvider>();
+    final forecast = context.watch<ForecastProvider>();
 
     // Keep dashboard synced whenever inventory rebuilds
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -78,7 +82,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Today\'s demand forecast',
+                          '7-day demand forecast',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -98,7 +102,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             'View all (6)',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Color(0xFFD35A2A),
+                              color: AppColors.secondary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -128,7 +132,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             runSpacing: 4,
                             children: [
                               const Text('Predicted Sales', overflow: TextOverflow.ellipsis),
-                              _buildLegendItem(label: 'Predicted Sales', color: const Color(0xFFD32F2F)),
+                              _buildLegendItem(label: 'Predicted Sales', color: AppColors.secondary),
                               _buildLegendItem(label: 'Actual Sales', color: const Color(0xFFFFC107)),
                             ],
                           ),
@@ -159,21 +163,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             height: 150,
                             child: CustomPaint(
                               size: const Size(double.infinity, 150),
-                              painter: _LineChartPainter(),
+                              painter: _LineChartPainter(data: forecast.sevenDayForecast),
                             ),
                           ),
-                          // X-axis labels to match wireframe
-                          const Padding(
-                            padding: EdgeInsets.only(top: 8),
+                          // X-axis labels
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('6am', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                                Text('9am', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                                Text('12 noon', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                                Text('3pm', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                                Text('6pm', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                              ],
+                              children: forecast.sevenDayForecast.isNotEmpty
+                                  ? forecast.sevenDayForecast
+                                      .map((f) => Text(
+                                            f['day'].toString(),
+                                            style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                          ))
+                                      .toList()
+                                  : [const Text('No data', style: TextStyle(fontSize: 10, color: Colors.grey))],
                             ),
                           ),
                         ],
@@ -480,7 +485,7 @@ class _DashboardHeader extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
-        color: Color(0xFFD32F2F),
+        color: AppColors.secondary,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(20),
           bottomRight: Radius.circular(20),
@@ -512,8 +517,8 @@ class _DashboardHeader extends StatelessWidget {
               Row(mainAxisSize: MainAxisSize.min, children: [
                 const CircleAvatar(
                     radius: 18,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.person, color: Color(0xFFD32F2F))),
+                    backgroundColor: AppColors.white,
+                    child: Icon(Icons.person, color: AppColors.secondary)),
                 const SizedBox(width: 8),
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.settings, color: Colors.white),
@@ -672,7 +677,7 @@ class _StatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(children: [
       _StatCard(label: 'Total Products', value: '${inventory.totalProducts}',
-          icon: Icons.inventory_2, color: const Color(0xFFD32F2F)),
+          icon: Icons.inventory_2, color: AppColors.secondary),
       const SizedBox(width: 12),
       _StatCard(label: 'Low Stock', value: '${inventory.lowStockProducts.length}',
           icon: Icons.warning_amber, color: Colors.orange),
@@ -714,46 +719,87 @@ class _StatCard extends StatelessWidget {
 // ── Chart Painter (unchanged) ─────────────────────────────────
 
 class _LineChartPainter extends CustomPainter {
+  final List<Map<String, dynamic>> data;
+
+  _LineChartPainter({required this.data});
+
   @override
   void paint(Canvas canvas, Size size) {
-    final paintLine1 = Paint()..color = const Color(0xFFD32F2F)..strokeWidth = 2..style = PaintingStyle.stroke;
+    if (data.isEmpty) {
+      final textPainter = TextPainter(
+        text: const TextSpan(
+          text: 'No data available',
+          style: TextStyle(color: Colors.grey, fontSize: 12),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset((size.width - textPainter.width) / 2, size.height / 2),
+      );
+      return;
+    }
+
+    final paintLine1 = Paint()..color = AppColors.secondary..strokeWidth = 2..style = PaintingStyle.stroke;
     final paintLine2 = Paint()..color = const Color(0xFFFFC107)..strokeWidth = 2..style = PaintingStyle.stroke;
-    final paintDots1 = Paint()..color = const Color(0xFFD32F2F)..style = PaintingStyle.fill;
+    final paintDots1 = Paint()..color = AppColors.secondary..style = PaintingStyle.fill;
     final paintDots2 = Paint()..color = const Color(0xFFFFC107)..style = PaintingStyle.fill;
 
     final path1 = Path();
     final path2 = Path();
 
-    final points1 = [
-      Offset(0, size.height * 0.8),
-      Offset(size.width * 0.25, size.height * 0.3),
-      Offset(size.width * 0.5, size.height * 0.1),
-      Offset(size.width * 0.75, size.height * 0.6),
-      Offset(size.width, size.height * 0.85),
-    ];
-    final points2 = [
-      Offset(0, size.height * 0.95),
-      Offset(size.width * 0.25, size.height * 0.5),
-      Offset(size.width * 0.5, size.height * 0.3),
-      Offset(size.width * 0.75, size.height * 0.8),
-      Offset(size.width, size.height * 0.9),
-    ];
+    double maxActual = 1;
+    double maxPredicted = 1;
 
-    path1.moveTo(points1[0].dx, points1[0].dy);
-    for (int i = 1; i < points1.length; i++) {
-      final p0 = points1[i - 1]; final p1 = points1[i];
-      path1.cubicTo(p0.dx + (p1.dx - p0.dx) / 2, p0.dy, p0.dx + (p1.dx - p0.dx) / 2, p1.dy, p1.dx, p1.dy);
+    for (var point in data) {
+      final actual = (point['actual'] ?? 0).toDouble();
+      final predicted = (point['predicted'] ?? 0).toDouble();
+      if (actual > maxActual) maxActual = actual;
+      if (predicted > maxPredicted) maxPredicted = predicted;
     }
-    path2.moveTo(points2[0].dx, points2[0].dy);
-    for (int i = 1; i < points2.length; i++) {
-      final p0 = points2[i - 1]; final p1 = points2[i];
-      path2.cubicTo(p0.dx + (p1.dx - p0.dx) / 2, p0.dy, p0.dx + (p1.dx - p0.dx) / 2, p1.dy, p1.dx, p1.dy);
+
+    maxActual = maxActual * 1.1;
+    maxPredicted = maxPredicted * 1.1;
+
+    final List<Offset> points1 = [];
+    final List<Offset> points2 = [];
+
+    for (int i = 0; i < data.length; i++) {
+      final actual = (data[i]['actual'] ?? 0).toDouble();
+      final predicted = (data[i]['predicted'] ?? 0).toDouble();
+
+      final x = (i / (data.length - 1)) * size.width;
+      final y1 = size.height - (actual / maxActual) * size.height;
+      final y2 = size.height - (predicted / maxPredicted) * size.height;
+
+      points1.add(Offset(x, y1));
+      points2.add(Offset(x, y2));
+    }
+
+    if (points1.isNotEmpty) {
+      path1.moveTo(points1[0].dx, points1[0].dy);
+      for (int i = 1; i < points1.length; i++) {
+        final p0 = points1[i - 1];
+        final p1 = points1[i];
+        path1.cubicTo(p0.dx + (p1.dx - p0.dx) / 2, p0.dy, p0.dx + (p1.dx - p0.dx) / 2, p1.dy, p1.dx, p1.dy);
+      }
+    }
+
+    if (points2.isNotEmpty) {
+      path2.moveTo(points2[0].dx, points2[0].dy);
+      for (int i = 1; i < points2.length; i++) {
+        final p0 = points2[i - 1];
+        final p1 = points2[i];
+        path2.cubicTo(p0.dx + (p1.dx - p0.dx) / 2, p0.dy, p0.dx + (p1.dx - p0.dx) / 2, p1.dy, p1.dx, p1.dy);
+      }
     }
 
     canvas.drawPath(path1, paintLine1);
     canvas.drawPath(path2, paintLine2);
-    for (var p in points1) { if (p.dx > 0) canvas.drawCircle(p, 3, paintDots1); }
-    for (var p in points2) { if (p.dx > 0) canvas.drawCircle(p, 3, paintDots2); }
+
+    for (var p in points1) { canvas.drawCircle(p, 3, paintDots1); }
+    for (var p in points2) { canvas.drawCircle(p, 3, paintDots2); }
 
     final axisPaint = Paint()..color = Colors.black..strokeWidth = 1;
     canvas.drawLine(const Offset(0, 0), Offset(0, size.height), axisPaint);
@@ -761,5 +807,5 @@ class _LineChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

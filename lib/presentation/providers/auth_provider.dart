@@ -95,64 +95,13 @@ class AuthProvider extends ChangeNotifier {
         businessName: '',
       );
       _userEmail = email;
-      // Not authenticated yet — email verification required
+      // Not authenticated yet — needs business details.
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       return true;
     } catch (e) {
       _errorMessage = _clean(e);
       _status = AuthStatus.unauthenticated;
-      notifyListeners();
-      return false;
-    }
-  }
-
-  // ── Email Verification ──────────────────────────────────────
-  Future<bool> verifyEmail({required String otp}) async {
-    _status = AuthStatus.loading;
-    _errorMessage = null;
-    notifyListeners();
-
-    // enforce exact length before hitting network
-    if (otp.length != 4) {
-      _errorMessage = 'Verification code must be 4 digits';
-      _status = AuthStatus.error;
-      notifyListeners();
-      return false;
-    }
-
-    try {
-      // Call API: POST /auth/verify-email { token: otp }
-      final authDataSource = serviceLocator.authRemoteDataSource;
-      await authDataSource.verifyEmail(otp: otp);
-
-      _status = AuthStatus.authenticated;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _errorMessage = _clean(e);
-      _status = AuthStatus.error;
-      notifyListeners();
-      return false;
-    }
-  }
-
-  // ── Resend Verification 
-  Future<bool> resendVerificationEmail(String email) async {
-    _status = AuthStatus.loading;
-    _errorMessage = null;
-    notifyListeners();
-
-    try {
-      final authDataSource = serviceLocator.authRemoteDataSource;
-      await authDataSource.resendVerificationEmail(email);
-
-      _status = AuthStatus.unauthenticated;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _errorMessage = _clean(e);
-      _status = AuthStatus.error;
       notifyListeners();
       return false;
     }

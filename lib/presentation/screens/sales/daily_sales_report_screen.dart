@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:prepal2/core/constants/app_colors.dart';
+import 'package:prepal2/presentation/widgets/shared_button.dart';
+import 'package:prepal2/presentation/providers/inventory_provider.dart';
+import 'package:prepal2/data/models/inventory/product_model.dart';
 
 class DailySalesReportScreen extends StatefulWidget {
   const DailySalesReportScreen({super.key});
@@ -10,6 +15,14 @@ class DailySalesReportScreen extends StatefulWidget {
 class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
   final _formKey = GlobalKey<FormState>();
   final List<_SalesEntry> _salesEntries = [_SalesEntry()];
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      context.read<InventoryProvider>().loadProducts();
+    });
+  }
 
   void _addProductRow() {
     setState(() {
@@ -27,7 +40,7 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Sales report saved successfully'),
-        backgroundColor: Color(0xFF4CAF50),
+        backgroundColor: AppColors.secondary,
       ),
     );
   }
@@ -38,7 +51,7 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Sales report submitted successfully'),
-        backgroundColor: Color(0xFF4CAF50),
+        backgroundColor: AppColors.secondary,
       ),
     );
   }
@@ -48,23 +61,23 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.black),
+          icon: const Icon(Icons.close, color: AppColors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'Prepal',
           style: TextStyle(
-            color: Colors.black,
+            color: AppColors.black,
             fontWeight: FontWeight.bold,
           ),
         ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
+            icon: const Icon(Icons.more_vert, color: AppColors.black),
             onPressed: () {},
           ),
         ],
@@ -86,8 +99,8 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(3),
                         color: index < 3
-                            ? const Color(0xFFD35A2A)
-                            : const Color(0xFFE8DEF8),
+                            ? AppColors.secondary
+                            : AppColors.lightGray,
                       ),
                     ),
                   ),
@@ -107,7 +120,22 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
               ),
               const SizedBox(height: 32),
 
-              Form(
+              Consumer<InventoryProvider>(
+                builder: (context, inv, child) {
+                  if (inv.isLoading) {
+                    return const Center(child: CircularProgressIndicator(color: AppColors.secondary));
+                  }
+                  final products = inv.allProducts;
+                  if (products.isEmpty) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Text('Please add products to your inventory before creating a sales report.'),
+                      ),
+                    );
+                  }
+
+                  return Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,6 +151,7 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
                           context,
                           _salesEntries[index],
                           index,
+                          products,
                         );
                       },
                     ),
@@ -156,46 +185,17 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: ElevatedButton(
+                          child: PrimaryButton(
+                            text: 'Save',
+                            type: ButtonType.tertiary,
                             onPressed: _handleSave,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFF3CDD3),
-                              foregroundColor: const Color(0xFF5A3A3A),
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: const Text(
-                              'Save',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
                           ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
-                          child: ElevatedButton(
+                          child: PrimaryButton(
+                            text: 'Submit',
                             onPressed: _handleSubmit,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFD35A2A),
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: const Text(
-                              'Submit',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
                           ),
                         ),
                       ],
@@ -203,7 +203,8 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
                     const SizedBox(height: 24),
                   ],
                 ),
-              ),
+              );
+              }),
             ],
           ),
         ),
@@ -215,6 +216,7 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
     BuildContext context,
     _SalesEntry entry,
     int index,
+    List<ProductModel> products,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -229,9 +231,10 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: entry.productName,
+        DropdownButtonFormField<ProductModel>(
+          value: entry.selectedProduct,
           decoration: InputDecoration(
+            hintText: 'Select a product',
             filled: true,
             fillColor: const Color(0xFFE8DEF8),
             border: OutlineInputBorder(
@@ -247,17 +250,18 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
               borderSide: BorderSide.none,
             ),
           ),
-          items: ['Mega meat pie', 'Cake', 'Bread', 'Pastries']
+          items: products
               .map((product) => DropdownMenuItem(
                     value: product,
-                    child: Text(product),
+                    child: Text(product.name),
                   ))
               .toList(),
           onChanged: (value) {
-            if (value != null) {
-              setState(() => entry.productName = value);
-            }
+            setState(() {
+              entry.selectedProduct = value;
+            });
           },
+          validator: (value) => value == null ? 'Please select a product' : null,
         ),
         const SizedBox(height: 16),
 
@@ -277,35 +281,20 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  DropdownButtonFormField<String>(
-                    value: entry.productType,
+                  TextFormField(
+                    initialValue: entry.selectedProduct != null 
+                        ? entry.selectedProduct!.category.name.toUpperCase()
+                        : '',
+                    readOnly: true,
                     decoration: InputDecoration(
+                      hintText: '-',
                       filled: true,
-                      fillColor: const Color(0xFFE8DEF8),
+                      fillColor: const Color(0xFFEEEEEE),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
                     ),
-                    items: ['Pastries', 'Cakes', 'Bread', 'Drinks']
-                        .map((type) => DropdownMenuItem(
-                              value: type,
-                              child: Text(type),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() => entry.productType = value);
-                      }
-                    },
                   ),
                 ],
               ),
@@ -325,13 +314,16 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
                   ),
                   const SizedBox(height: 8),
                   TextFormField(
-                    controller: entry.productionDateController,
+                    key: ValueKey('date_${entry.selectedProduct?.id}'),
+                    initialValue: entry.selectedProduct != null
+                        ? '${entry.selectedProduct!.productionDate.day.toString().padLeft(2, '0')}-${entry.selectedProduct!.productionDate.month.toString().padLeft(2, '0')}-${entry.selectedProduct!.productionDate.year}'
+                        : '',
                     readOnly: true,
                     decoration: InputDecoration(
-                      hintText: '14-02-2026',
+                      hintText: '-',
                       hintStyle: const TextStyle(color: Color(0xFFBDBDBD)),
                       filled: true,
-                      fillColor: const Color(0xFFE8DEF8),
+                      fillColor: const Color(0xFFEEEEEE),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -345,18 +337,6 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
                         borderSide: BorderSide.none,
                       ),
                     ),
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime(2030),
-                      );
-                      if (picked != null) {
-                        setState(() => entry.productionDateController.text =
-                            '${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year}');
-                      }
-                    },
                   ),
                 ],
               ),
@@ -420,11 +400,15 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  DropdownButtonFormField<String>(
-                    value: entry.unit,
+                  TextFormField(
+                    initialValue: entry.selectedProduct != null
+                        ? entry.selectedProduct!.unit.name.toUpperCase()
+                        : '',
+                    readOnly: true,
                     decoration: InputDecoration(
+                      hintText: '-',
                       filled: true,
-                      fillColor: const Color(0xFFE8DEF8),
+                      fillColor: const Color(0xFFEEEEEE),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -438,17 +422,6 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
                         borderSide: BorderSide.none,
                       ),
                     ),
-                    items: ['PCS', 'KG', 'L', 'BOX']
-                        .map((u) => DropdownMenuItem(
-                              value: u,
-                              child: Text(u),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() => entry.unit = value);
-                      }
-                    },
                   ),
                 ],
               ),
@@ -459,7 +432,7 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
 
         // Stock left
         const Text(
-          'Stock left',
+          'Current stock',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -468,13 +441,16 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
         ),
         const SizedBox(height: 8),
         TextFormField(
-          controller: entry.stockLeftController,
+          key: ValueKey('stock_${entry.selectedProduct?.id}'),
+          initialValue: entry.selectedProduct != null
+              ? '${entry.selectedProduct!.quantityAvailable} ${entry.selectedProduct!.unit.name.toUpperCase()}'
+              : '',
           readOnly: true,
           decoration: InputDecoration(
-            hintText: '0 pcs',
+            hintText: '-',
             hintStyle: const TextStyle(color: Color(0xFFBDBDBD)),
             filled: true,
-            fillColor: const Color(0xFFE8DEF8),
+            fillColor: const Color(0xFFEEEEEE),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
@@ -508,12 +484,6 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
 }
 
 class _SalesEntry {
-  String productName = 'Mega meat pie';
-  String productType = 'Pastries';
-  final TextEditingController productionDateController =
-      TextEditingController(text: '14-02-2026');
+  ProductModel? selectedProduct;
   final TextEditingController quantitySoldController = TextEditingController();
-  String unit = 'PCS';
-  final TextEditingController stockLeftController =
-      TextEditingController(text: '0 pcs');
 }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:prepal2/core/network/api_client.dart';
+import 'package:prepal2/core/network/api_constants.dart';
 
 abstract class ForecastRemoteDataSource {
   /// Calls ML service to get 7-day demand forecast
@@ -23,11 +24,9 @@ class ForecastRemoteDataSourceImpl implements ForecastRemoteDataSource {
   @override
   Future<Map<String, dynamic>> get7DayForecast() async {
     // Call ML service to get 7-day forecast
-    // ML service endpoint: https://preppal-2mb4.onrender.com/api/predict
     final response = await _apiClient.mlPost(
-      'https://preppal-2mb4.onrender.com/api/predict',
+      ApiConstants.mlPredictWeek,
       body: {
-        'type': '7day_forecast',
         'businessId': _apiClient.getBusinessId() ?? '',
       },
     );
@@ -43,11 +42,10 @@ class ForecastRemoteDataSourceImpl implements ForecastRemoteDataSource {
 
   @override
   Future<List<Map<String, dynamic>>> getProductForecasts() async {
-    // Get product-level forecasts from ML service
+    // Get product-level forecasts from ML service using mlPredictWeek
     final response = await _apiClient.mlPost(
-      'https://preppal-2mb4.onrender.com/api/predict',
+      ApiConstants.mlPredictWeek,
       body: {
-        'type': 'product_forecast',
         'businessId': _apiClient.getBusinessId() ?? '',
       },
     );
@@ -72,9 +70,8 @@ class ForecastRemoteDataSourceImpl implements ForecastRemoteDataSource {
   Future<Map<String, dynamic>> getForecastAccuracy() async {
     // Get historical forecast accuracy (last 30 days)
     final response = await _apiClient.mlPost(
-      'https://preppal-2mb4.onrender.com/api/predict',
+      ApiConstants.mlAccuracy,
       body: {
-        'type': 'accuracy_metrics',
         'businessId': _apiClient.getBusinessId() ?? '',
         'days': 30,
       },
@@ -97,9 +94,8 @@ class ForecastRemoteDataSourceImpl implements ForecastRemoteDataSource {
   Future<Map<String, dynamic>> getAIInsights() async {
     // Get AI-generated insights about forecast patterns
     final response = await _apiClient.mlPost(
-      'https://preppal-2mb4.onrender.com/api/predict',
+      ApiConstants.mlRecommend,
       body: {
-        'type': 'insights',
         'businessId': _apiClient.getBusinessId() ?? '',
       },
     );

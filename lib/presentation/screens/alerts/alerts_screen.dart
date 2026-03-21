@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:prepal2/core/constants/app_colors.dart';
+import 'package:prepal2/presentation/providers/dashboard_provider.dart';
 
 class AlertsScreen extends StatefulWidget {
   const AlertsScreen({Key? key}) : super(key: key);
@@ -8,78 +11,36 @@ class AlertsScreen extends StatefulWidget {
 }
 
 class _AlertsScreenState extends State<AlertsScreen> {
-  // Mock alerts data
-  final List<Map<String, dynamic>> alerts = [
-    {
-      'type': 'critical',
-      'icon': Icons.warning_amber_rounded,
-      'title': 'Mega meat pie',
-      'message': '8 PCS over Optimal',
-      'time': '2 hours ago',
-      'icon_emoji': '🥧',
-    },
-    {
-      'type': 'critical',
-      'icon': Icons.warning_amber_rounded,
-      'title': 'Spaghetti',
-      'message': 'Prepare 24KG more',
-      'time': '1 hour ago',
-      'icon_emoji': '🍝',
-    },
-    {
-      'type': 'warning',
-      'icon': Icons.info_outline_rounded,
-      'title': 'Jollof rice',
-      'message': 'Stock below optimal level',
-      'time': '30 min ago',
-      'icon_emoji': '🍚',
-    },
-    {
-      'type': 'info',
-      'icon': Icons.check_circle_outline_rounded,
-      'title': 'Chicken',
-      'message': 'Stock at optimal level',
-      'time': '15 min ago',
-      'icon_emoji': '🍗',
-    },
-    {
-      'type': 'critical',
-      'icon': Icons.warning_amber_rounded,
-      'title': 'Jollof rice (Brown)',
-      'message': 'Expired product detected',
-      'time': '5 min ago',
-      'icon_emoji': '🍚',
-    },
-  ];
-
   String selectedFilter = 'All';
 
-  List<Map<String, dynamic>> get filteredAlerts {
+  List<DashboardAlert> _getFilteredAlerts(List<DashboardAlert> alerts) {
     if (selectedFilter == 'All') return alerts;
-    return alerts.where((alert) => alert['type'] == selectedFilter).toList();
+    return alerts.where((alert) => alert.severity == selectedFilter).toList();
   }
 
   Color _getAlertColor(String type) {
     switch (type) {
-      case 'critical':
-        return const Color(0xFFD32F2F);
-      case 'warning':
-        return const Color(0xFFFFC107);
-      case 'info':
-        return const Color(0xFF4CAF50);
+      case 'High':
+        return AppColors.darkRed;
+      case 'Medium':
+        return AppColors.accent;
+      case 'Low':
+        return AppColors.secondary;
       default:
-        return Colors.grey;
+        return AppColors.gray;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    int criticalCount = alerts.where((a) => a['type'] == 'critical').length;
+    final alerts = context.watch<DashboardProvider>().allAlerts;
+    final filteredAlerts = _getFilteredAlerts(alerts);
+    int criticalCount = alerts.where((a) => a.severity == 'High').length;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFD35A2A),
+        backgroundColor: AppColors.secondary,
         elevation: 0,
         title: const Text('Alerts'),
         centerTitle: true,
@@ -95,7 +56,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
           // Critical alert banner
           if (criticalCount > 0)
             Container(
-              color: const Color(0xFFD35A2A),
+              color: AppColors.darkRed,
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
@@ -148,26 +109,26 @@ class _AlertsScreenState extends State<AlertsScreen> {
                   ),
                   const SizedBox(width: 8),
                   _FilterChip(
-                    label: 'Critical',
-                    isSelected: selectedFilter == 'critical',
+                    label: 'High Risk',
+                    isSelected: selectedFilter == 'High',
                     onTap: () {
-                      setState(() => selectedFilter = 'critical');
+                      setState(() => selectedFilter = 'High');
                     },
                   ),
                   const SizedBox(width: 8),
                   _FilterChip(
-                    label: 'Warning',
-                    isSelected: selectedFilter == 'warning',
+                    label: 'Medium',
+                    isSelected: selectedFilter == 'Medium',
                     onTap: () {
-                      setState(() => selectedFilter = 'warning');
+                      setState(() => selectedFilter = 'Medium');
                     },
                   ),
                   const SizedBox(width: 8),
                   _FilterChip(
                     label: 'Info',
-                    isSelected: selectedFilter == 'info',
+                    isSelected: selectedFilter == 'Low',
                     onTap: () {
-                      setState(() => selectedFilter = 'info');
+                      setState(() => selectedFilter = 'Low');
                     },
                   ),
                 ],
@@ -235,10 +196,10 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFD35A2A) : Colors.white,
+          color: isSelected ? AppColors.secondary : AppColors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFFD35A2A) : Colors.grey[300]!,
+            color: isSelected ? AppColors.secondary : AppColors.gray,
             width: 1,
           ),
         ),
@@ -247,7 +208,7 @@ class _FilterChip extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: isSelected ? Colors.white : Colors.black87,
+            color: isSelected ? AppColors.white : AppColors.black,
           ),
         ),
       ),
@@ -256,7 +217,7 @@ class _FilterChip extends StatelessWidget {
 }
 
 class _AlertCard extends StatelessWidget {
-  final Map<String, dynamic> alert;
+  final DashboardAlert alert;
   final Color alertColor;
 
   const _AlertCard({
@@ -295,7 +256,7 @@ class _AlertCard extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: Icon(
-              alert['icon'],
+              alert.severity == 'High' ? Icons.warning_amber_rounded : Icons.info_outline_rounded,
               color: alertColor,
               size: 24,
             ),
@@ -308,7 +269,7 @@ class _AlertCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  alert['title'],
+                  alert.productName,
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -317,28 +278,22 @@ class _AlertCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  alert['message'],
+                  alert.message,
                   style: const TextStyle(
                     fontSize: 12,
                     color: Colors.grey,
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  alert['time'],
-                  style: const TextStyle(
+                const Text(
+                  'Just now',
+                  style: TextStyle(
                     fontSize: 11,
                     color: Colors.grey,
                   ),
                 ),
               ],
             ),
-          ),
-
-          // Product emoji
-          Text(
-            alert['icon_emoji'],
-            style: const TextStyle(fontSize: 24),
           ),
         ],
       ),

@@ -4,6 +4,7 @@ import 'package:prepal2/presentation/providers/inventory_provider.dart';
 import 'package:prepal2/data/models/inventory/product_model.dart';
 import 'package:prepal2/presentation/screens/inventory/product_detail_screen.dart';
 import 'package:prepal2/presentation/screens/inventory/add_product_screen.dart';
+import 'package:prepal2/core/constants/app_colors.dart';
 
 class InventoryListScreen extends StatefulWidget {
   const InventoryListScreen({super.key});
@@ -55,10 +56,10 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
   }
 
   Color _statusColor(ProductModel p) {
-    if (_isCritical(p)) return const Color(0xFFD32F2F);
-    if (_isLow(p)) return const Color(0xFFFFA726);
-    if (_isOverStock(p)) return const Color(0xFFEF5350);
-    return const Color(0xFF66BB6A);
+    if (_isCritical(p)) return AppColors.darkRed;
+    if (_isLow(p)) return AppColors.accent;
+    if (_isOverStock(p)) return AppColors.primary;
+    return AppColors.secondary;
   }
 
   // ── Smart insight generation ────────────────────────────────
@@ -114,14 +115,10 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
 
           return Column(
             children: [
-              // ── Red Header ─────────────────────────────────
+              // ── Header ─────────────────────────────────
               Container(
                 decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFFE53935), Color(0xFFD32F2F)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: AppColors.secondary, // Solid green instead of red gradient
                 ),
                 child: SafeArea(
                   bottom: false,
@@ -253,15 +250,15 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
                                       _StatPill(
                                           count: lowCount,
                                           label: 'Low',
-                                          color: const Color(0xFFFFA726)),
+                                          color: AppColors.accent),
                                       _StatPill(
                                           count: overCount,
                                           label: 'Over',
-                                          color: const Color(0xFFEF5350)),
+                                          color: AppColors.primary),
                                       _StatPill(
                                           count: optimalCount,
                                           label: 'Optimal',
-                                          color: const Color(0xFF66BB6A)),
+                                          color: AppColors.secondary),
                                     ],
                                   ),
                                 ),
@@ -493,13 +490,13 @@ class _SmartInsightsSection extends StatelessWidget {
   Color _labelColor(String label) {
     switch (label) {
       case 'Critical':
-        return const Color(0xFFD32F2F);
+        return AppColors.darkRed;
       case 'Low':
-        return const Color(0xFFFFA726);
+        return AppColors.accent;
       case 'Over':
-        return const Color(0xFFEF5350);
+        return AppColors.primary;
       default:
-        return const Color(0xFF66BB6A);
+        return AppColors.secondary;
     }
   }
 

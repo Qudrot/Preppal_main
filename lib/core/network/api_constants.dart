@@ -7,7 +7,10 @@ class ApiConstants {
 
   // ── ML Service (separate server) ───────────────────────────
   static const String mlBaseUrl = 'https://preppal-2mb4.onrender.com';
-  static const String mlPredict = '$mlBaseUrl/api/predict';
+  static const String mlPredictWeek = '$mlBaseUrl/api/predict-week';
+  static const String mlRiskAlert = '$mlBaseUrl/api/risk-alert';
+  static const String mlRecommend = '$mlBaseUrl/api/recommend';
+  static const String mlAccuracy = '$mlBaseUrl/api/accuracy';
 
   // ── Auth ───────────────────────────────────────────────────
   static const String authSignup = '/api/v1/auth/signup';

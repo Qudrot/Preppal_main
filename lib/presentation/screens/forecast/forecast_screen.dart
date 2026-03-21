@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prepal2/core/constants/app_colors.dart';
 
 class ForecastScreen extends StatelessWidget {
   const ForecastScreen({super.key});
@@ -8,7 +9,7 @@ class ForecastScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFD32F2F),
+        backgroundColor: AppColors.secondary,
         foregroundColor: Colors.white,
         title: const Text('Forecast'),
         automaticallyImplyLeading: false,

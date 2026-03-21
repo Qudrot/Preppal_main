@@ -19,13 +19,6 @@ abstract class AuthRemoteDataSource {
     required String password,
   });
 
-  /// POST /api/v1/auth/verify-email
-  /// Body: { token: "OTP_CODE" }
-  Future<void> verifyEmail({required String otp});
-
-  /// POST /api/v1/auth/resend-verification
-  /// Body: { email }
-  Future<void> resendVerificationEmail(String email);
 
   /// POST /api/v1/auth/forgot-password
   Future<void> forgotPassword(String email);
@@ -105,36 +98,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
   }
 
-  @override
-  Future<void> verifyEmail({required String otp}) async {
-    // guard against invalid length locally (API expects 4-digit codes)
-    if (otp.length != 4) {
-      throw Exception('OTP must be exactly 4 digits');
-    }
-
-    final response = await _apiClient.post(
-      ApiConstants.authVerifyEmail,
-      body: {'token': otp}, // API expects field named "token"
-    );
-
-    if (response.statusCode != 200) {
-      final body = jsonDecode(response.body) as Map<String, dynamic>;
-      throw Exception(body['message'] ?? 'Email verification failed');
-    }
-  }
-
-  @override
-  Future<void> resendVerificationEmail(String email) async {
-    final response = await _apiClient.post(
-      ApiConstants.authResendVerification,
-      body: {'email': email},
-    );
-
-    if (response.statusCode != 200) {
-      final body = jsonDecode(response.body) as Map<String, dynamic>;
-      throw Exception(body['message'] ?? 'Could not resend verification');
-    }
-  }
 
   @override
   Future<void> forgotPassword(String email) async {

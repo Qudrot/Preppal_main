@@ -112,35 +112,24 @@ class _LoginScreenState extends State<LoginScreen> {
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         onChanged: (_) => authProvider.clearError(),
-                        decoration: _inputDecoration('yourmail@example.com'),
-                        validator: (v) {
-                          if (v == null || v.isEmpty) return 'Please enter your email';
-                          if (!v.contains('@')) return 'Please enter a valid email';
-                          return null;
-                        },
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // Password
-                      _buildLabel('Password'),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        onChanged: (_) => authProvider.clearError(),
-                        decoration: _inputDecoration('••••••••').copyWith(
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
-                              color: Colors.grey,
-                            ),
-                            onPressed: () =>
-                                setState(() => _obscurePassword = !_obscurePassword),
-                          ),
-                        ),
+  InputDecoration _inputDecoration(String hint) => InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: AppColors.gray),
+        filled: true,
+        fillColor: AppColors.lightGray.withOpacity(0.2), // Light gray background
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.gray.withOpacity(0.5)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.gray.withOpacity(0.5)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.secondary, width: 1.5),
+        ),
+      );
                         validator: (v) =>
                             v == null || v.isEmpty ? 'Please enter your password' : null,
                       ),
@@ -170,15 +159,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       // Login button
                       SizedBox(
                         width: double.infinity,
-                        height: 56,
+                        height: 48, // Standard height
                         child: ElevatedButton(
                           onPressed: authProvider.isLoading ? null : _handleLogin,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFF6B35),
-                            foregroundColor: Colors.white,
+                            backgroundColor: AppColors.secondary, // Green primary button
+                            foregroundColor: AppColors.white,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(8), // Standard radius
                             ),
                           ),
                           child: authProvider.isLoading
@@ -186,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   height: 20,
                                   width: 20,
                                   child: CircularProgressIndicator(
-                                    color: Colors.white,
+                                    color: AppColors.white,
                                     strokeWidth: 2,
                                   ),
                                 )
@@ -218,29 +207,29 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Text(
           text,
           style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Colors.black,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.black,
           ),
         ),
       );
 
   InputDecoration _inputDecoration(String hint) => InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Color(0xFFBDBDBD)),
+        hintStyle: const TextStyle(color: AppColors.gray),
         filled: true,
-        fillColor: const Color(0xFFE8DEF8),
+        fillColor: AppColors.white, // Standard white fill
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.gray), // Standard border
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.gray), // Standard border
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.secondary, width: 1.5),
         ),
       );
 }
