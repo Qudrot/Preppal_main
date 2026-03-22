@@ -54,17 +54,46 @@ class BusinessProvider extends ChangeNotifier {
       final ds = serviceLocator.businessRemoteDataSource;
       final list = await ds.getAllBusinesses();
       _businesses = list.map((m) => BusinessModel.fromMap(m)).toList();
-
+      
       if (_businesses.isNotEmpty) {
         _currentBusiness = _businesses.first;
+      } else {
+        // Fallback: If list is empty but we have a cached ID, try to fetch it directly
+        final cachedId = serviceLocator.apiClient.getBusinessId();
+        if (cachedId != null && cachedId.isNotEmpty) {
+          try {
+            final businessMap = await ds.getBusinessById(cachedId);
+            _currentBusiness = BusinessModel.fromMap(businessMap);
+            _businesses = [_currentBusiness!];
+          } catch (_) {
+            _currentBusiness = null;
+          }
+        } else {
+          _currentBusiness = null;
+        }
       }
 
       _status = BusinessStatus.loaded;
     } catch (e) {
-      // Silently handle — user may not have a business yet
-      _businesses = [];
-      _currentBusiness = null;
-      _status = BusinessStatus.loaded;
+      // If we failed to get all, still try the fallback if we have an ID
+      final cachedId = serviceLocator.apiClient.getBusinessId();
+      if (cachedId != null && cachedId.isNotEmpty) {
+        try {
+          final ds = serviceLocator.businessRemoteDataSource;
+          final businessMap = await ds.getBusinessById(cachedId);
+          _currentBusiness = BusinessModel.fromMap(businessMap);
+          _businesses = [_currentBusiness!];
+          _status = BusinessStatus.loaded;
+        } catch (_) {
+          _businesses = [];
+          _currentBusiness = null;
+          _status = BusinessStatus.loaded;
+        }
+      } else {
+        _businesses = [];
+        _currentBusiness = null;
+        _status = BusinessStatus.loaded;
+      }
     }
 
     notifyListeners();

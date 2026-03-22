@@ -75,13 +75,6 @@ class _SignupScreenState extends State<SignupScreen> {
           icon: const Icon(Icons.close, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'PrepPal',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -99,11 +92,19 @@ class _SignupScreenState extends State<SignupScreen> {
                     children: [
                       const SizedBox(height: 24),
 
-                      // PrepPal Logo
-                      Image.asset(
-                        'assets/logo.png',
-                        width: 120,
-                        height: 120,
+                      // PrepPal Logo in Circle
+                      Container(
+                        width: 150,
+                        height: 150,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF282324), // Black/Dark background
+                          shape: BoxShape.circle,
+                        ),
+                        padding: const EdgeInsets.all(20),
+                        child: Image.asset(
+                          'assets/logo.png',
+                          fit: BoxFit.contain,
+                        ),
                       ),
 
                       const SizedBox(height: 24),
@@ -115,13 +116,33 @@ class _SignupScreenState extends State<SignupScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      const SizedBox(height: 8),
+
+                      // Progress bar (3 steps total)
+                      Row(
+                        children: List.generate(
+                            3,
+                            (i) => Expanded(
+                                  child: Container(
+                                    height: 4,
+                                    margin: EdgeInsets.only(right: i < 2 ? 8 : 0),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(2),
+                                      color: i == 0
+                                          ? AppColors.secondary
+                                          : AppColors.primary.withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                )),
+                      ),
+                      const SizedBox(height: 16),
 
                       const SizedBox(height: 8),
 
                       const Text(
                         'Please input the required information',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 16,
                           color: Color(0xFF757575),
                         ),
                       ),
@@ -129,207 +150,103 @@ class _SignupScreenState extends State<SignupScreen> {
                       const SizedBox(height: 32),
 
                       // Username
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Username',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.black,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: _usernameController,
-                            onChanged: (_) => authProvider.clearError(),
-                            decoration: _inputDecoration('deliciousness2027'),
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return 'Username required';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            'please input username',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF9E9E9E),
-                            ),
-                          ),
-                        ],
+                      _buildField(
+                        label: 'Username',
+                        hint: 'deliciousness2027',
+                        subtitle: 'please input username',
+                        controller: _usernameController,
+                        validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+                        onChanged: (_) => authProvider.clearError(),
                       ),
 
                       const SizedBox(height: 16),
 
                       // Email
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Email address',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.black,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
-                            onChanged: (_) => authProvider.clearError(),
-                            decoration: _inputDecoration('deliciousness@egg.ic'),
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return 'Email required';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            'please input email address',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF9E9E9E),
-                            ),
-                          ),
-                        ],
+                      _buildField(
+                        label: 'Email address',
+                        hint: 'deliciousness@ggg.ic',
+                        subtitle: 'please input email address',
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+                        onChanged: (_) => authProvider.clearError(),
                       ),
 
                       const SizedBox(height: 16),
 
                       // Password
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                    const Text(
-                      'Create password',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      onChanged: (_) => authProvider.clearError(),
-                      decoration: _inputDecoration('••••••••').copyWith(
+                      _buildField(
+                        label: 'Create password',
+                        hint: '******',
+                        subtitle: 'Please enter 8 characters with one number and one capital letter',
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        onChanged: (_) => authProvider.clearError(),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            color: AppColors.gray,
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            color: AppColors.black,
                           ),
-                          onPressed: () {
-                            setState(() => _obscurePassword = !_obscurePassword);
-                          },
+                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                         ),
+                        validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Password required';
-                        }
 
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Must be 8+ characters with letters, numbers, and special characters (!@#\$%^&*)',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF9E9E9E),
-                      ),
-                    ),
-                  ],
-                ),
+                      const SizedBox(height: 16),
 
-                const SizedBox(height: 16),
-
-                // Confirm Password (UI only)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Retype password',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _confirmPasswordController,
-                      obscureText: _obscureConfirmPassword,
-                      onChanged: (_) => authProvider.clearError(),
-                      decoration: _inputDecoration('••••••••').copyWith(
+                      // Confirm Password
+                      _buildField(
+                        label: 'Retype password',
+                        hint: '******',
+                        subtitle: 'Please enter the same characters as above',
+                        controller: _confirmPasswordController,
+                        obscureText: _obscureConfirmPassword,
+                        onChanged: (_) => authProvider.clearError(),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscureConfirmPassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            color: AppColors.gray,
+                            _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                            color: AppColors.black,
                           ),
-                          onPressed: () {
-                            setState(() => _obscureConfirmPassword =
-                                !_obscureConfirmPassword);
-                          },
+                          onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                         ),
+                        validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                       ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Confirm password required';
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
-                ),
 
-                const SizedBox(height: 12),
+                      const SizedBox(height: 12),
 
-                // API error message (from provider)
-                if (authProvider.errorMessage != null)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFEBEE),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      authProvider.errorMessage!,
-                      style: const TextStyle(
-                        color: Color(0xFFB00020),
-                        fontSize: 13,
+                      // API error message (from provider)
+                      if (authProvider.errorMessage != null)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFEBEE),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            authProvider.errorMessage!,
+                            style: const TextStyle(
+                              color: Color(0xFFB00020),
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+
+                      const SizedBox(height: 24),
+
+                      // Register button
+                      PrimaryButton(
+                        text: 'Register',
+                        onPressed: _handleSignup,
+                        isLoading: authProvider.isLoading,
                       ),
-                    ),
+
+                      const SizedBox(height: 32),
+                    ],
                   ),
-
-                const SizedBox(height: 24),
-
-                // Next button
-                PrimaryButton(
-                  text: 'Next',
-                  onPressed: _handleSignup,
-                  isLoading: authProvider.isLoading,
                 ),
-
-                const SizedBox(height: 32),
-              ],
-            ),
-          ),
-        ),
-        ),
+                ),
+              ),
             );
           },
         ),
@@ -337,22 +254,77 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  InputDecoration _inputDecoration(String hint) => InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(color: AppColors.gray),
-        filled: true,
-        fillColor: AppColors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.gray),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.gray),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.secondary, width: 1.5),
-        ),
-      );
+  Widget _buildField({
+    required String label,
+    required String hint,
+    required String subtitle,
+    required TextEditingController controller,
+    String? Function(String?)? validator,
+    void Function(String)? onChanged,
+    TextInputType? keyboardType,
+    bool obscureText = false,
+    Widget? suffixIcon,
+  }) {
+    return Focus(
+      onFocusChange: (hasFocus) => setState(() {}),
+      child: Builder(builder: (context) {
+        final hasFocus = Focus.of(context).hasFocus;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.black,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: controller,
+              obscureText: obscureText,
+              keyboardType: keyboardType,
+              onChanged: onChanged,
+              validator: validator,
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: const TextStyle(color: AppColors.gray),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide:
+                      const BorderSide(color: AppColors.secondary, width: 1.5),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(color: Colors.red, width: 1.5),
+                ),
+                suffixIcon: suffixIcon,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF9E9E9E),
+              ),
+            ),
+          ],
+        );
+      }),
+    );
+  }
 }

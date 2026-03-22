@@ -41,7 +41,7 @@ class _MainShellState extends State<MainShell> {
       context.read<InventoryProvider>().loadProducts();
       
       final businessProvider = context.read<BusinessProvider>();
-      if (businessProvider.hasBusiness) {
+      if (businessProvider.hasBusiness && businessProvider.currentBusiness != null) {
         context.read<DailySalesProvider>().loadSalesForBusiness(businessProvider.currentBusiness!.id);
       }
     });

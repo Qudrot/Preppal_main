@@ -17,6 +17,7 @@ enum ProductCategory {
   @JsonValue('Meat') meat,
   @JsonValue('Spices') spices,
   @JsonValue('Frozen') frozen,
+  @JsonValue('Pastries') pastries,
   @JsonValue('Others') others,
 }
 

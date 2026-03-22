@@ -85,8 +85,6 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // signupUseCase requires businessName — pass empty string
-      // (business setup happens on BusinessDetailsScreen after verification)
       _currentUser = await signupUseCase(
         username: username,
         email: email,
@@ -95,10 +93,10 @@ class AuthProvider extends ChangeNotifier {
         businessName: '',
       );
       _userEmail = email;
-      // Not authenticated yet — needs business details.
-      _status = AuthStatus.unauthenticated;
-      notifyListeners();
-      return true;
+      
+      // Automatically log the user in to get the access token
+      // required for the subsequent business details setup API calls
+      return await login(email: email, password: password);
     } catch (e) {
       _errorMessage = _clean(e);
       _status = AuthStatus.unauthenticated;

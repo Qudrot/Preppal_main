@@ -1,19 +1,29 @@
 import 'dart:convert';
+import 'package:intl/intl.dart';
 import 'package:prepal2/core/network/api_client.dart';
 import 'package:prepal2/core/network/api_constants.dart';
 
 abstract class ForecastRemoteDataSource {
-  /// Calls ML service to get 7-day demand forecast
-  Future<Map<String, dynamic>> get7DayForecast();
-
-  /// Get per-product forecast predictions from ML service
-  Future<List<Map<String, dynamic>>> getProductForecasts();
+  /// Calls ML service to get 7-day demand forecast for a specific product
+  Future<Map<String, dynamic>> get7DayForecast({
+    required String itemName,
+    required String businessType,
+    required double price,
+    required int shelfLifeHours,
+    required String startingDate,
+  });
 
   /// Get forecast accuracy metrics (last 30 days)
-  Future<Map<String, dynamic>> getForecastAccuracy();
+  Future<Map<String, dynamic>> getForecastAccuracy({
+    required String itemName,
+    required double predictedDemand,
+  });
 
   /// Get AI insights based on current forecast data
   Future<Map<String, dynamic>> getAIInsights();
+
+  /// Get product-level forecasts
+  Future<List<Map<String, dynamic>>> getProductForecasts();
 }
 
 class ForecastRemoteDataSourceImpl implements ForecastRemoteDataSource {
@@ -22,12 +32,25 @@ class ForecastRemoteDataSourceImpl implements ForecastRemoteDataSource {
   ForecastRemoteDataSourceImpl(this._apiClient);
 
   @override
-  Future<Map<String, dynamic>> get7DayForecast() async {
+  Future<Map<String, dynamic>> get7DayForecast({
+    required String itemName,
+    required String businessType,
+    required double price,
+    required int shelfLifeHours,
+    required String startingDate,
+  }) async {
     // Call ML service to get 7-day forecast
     final response = await _apiClient.mlPost(
       ApiConstants.mlPredictWeek,
       body: {
         'businessId': _apiClient.getBusinessId() ?? '',
+        'item_name': itemName,
+        'business_type': businessType,
+        'price': price,
+        'shelf_life_hours': shelfLifeHours,
+        'starting_date': startingDate,
+        'weather_forecast': ['Sunny'], // list as per ML requirements
+        'holiday_flags': [0], // list as per ML requirements
       },
     );
 
@@ -47,6 +70,13 @@ class ForecastRemoteDataSourceImpl implements ForecastRemoteDataSource {
       ApiConstants.mlPredictWeek,
       body: {
         'businessId': _apiClient.getBusinessId() ?? '',
+        'item_name': 'All', // Default for summary
+        'business_type': 'Bakery', // Default for summary
+        'price': 0.0,
+        'shelf_life_hours': 24,
+        'starting_date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
+        'weather_forecast': ['Sunny'],
+        'holiday_flags': [0],
       },
     );
 
@@ -67,13 +97,17 @@ class ForecastRemoteDataSourceImpl implements ForecastRemoteDataSource {
   }
 
   @override
-  Future<Map<String, dynamic>> getForecastAccuracy() async {
+  Future<Map<String, dynamic>> getForecastAccuracy({
+    required String itemName,
+    required double predictedDemand,
+  }) async {
     // Get historical forecast accuracy (last 30 days)
     final response = await _apiClient.mlPost(
       ApiConstants.mlAccuracy,
       body: {
         'businessId': _apiClient.getBusinessId() ?? '',
-        'days': 30,
+        'item_name': itemName,
+        'predicted_demand': predictedDemand <= 0 ? 10.0 : predictedDemand, // Guard against 0 or negative
       },
     );
 
@@ -97,6 +131,9 @@ class ForecastRemoteDataSourceImpl implements ForecastRemoteDataSource {
       ApiConstants.mlRecommend,
       body: {
         'businessId': _apiClient.getBusinessId() ?? '',
+        // Some backends require these even for general recommendations
+        'item_name': 'General',
+        'predicted_demand': 10.0, 
       },
     );
 

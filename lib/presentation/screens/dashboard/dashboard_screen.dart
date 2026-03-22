@@ -34,8 +34,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // Fetch today's sales from API if business exists
       if (business != null && business.id.isNotEmpty) {
         await dashboard.loadSales(business.id);
+        if (mounted) {
+          await context.read<ForecastProvider>().loadForecastData(
+            products: context.read<InventoryProvider>().allProducts,
+            businessType: business.businessType,
+          );
+        }
       }
-      context.read<ForecastProvider>().loadForecastData();
     });
   }
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:prepal2/presentation/providers/business_provider.dart';
-import 'package:prepal2/presentation/screens/main_shell.dart';
-import 'package:prepal2/core/constants/app_colors.dart';
 import 'package:prepal2/presentation/widgets/shared_button.dart';
+import 'package:prepal2/presentation/screens/inventory/add_product_screen.dart';
+import 'package:prepal2/core/constants/app_colors.dart';
 
 class BusinessDetailsScreen extends StatefulWidget {
   const BusinessDetailsScreen({super.key});
@@ -15,15 +15,23 @@ class BusinessDetailsScreen extends StatefulWidget {
 class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
   final _formKey = GlobalKey<FormState>();
   final _businessNameController = TextEditingController();
-  final _locationController = TextEditingController();    // renamed from contactAddress
+  final _locationController = TextEditingController(); // renamed from contactAddress
   final _contactNumberController = TextEditingController();
   final _websiteController = TextEditingController();
+
+  bool _isSaving = false;
+  bool _isNextLoading = false;
 
   // API confirmed businessType values
   String _selectedBusinessType = 'Cafe';
   final List<String> _businessTypes = [
-    'Cafe', 'Restaurant', 'Bakery', 'Catering', 'Food Truck',
-    'Home Kitchen', 'Others'
+    'Cafe',
+    'Restaurant',
+    'Bakery',
+    'Catering',
+    'Food Truck',
+    'Home Kitchen',
+    'Others'
   ];
 
   @override
@@ -38,21 +46,33 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
   Future<void> _submit({bool navigateAfter = true}) async {
     if (!_formKey.currentState!.validate()) return;
 
+    if (navigateAfter) {
+      setState(() => _isNextLoading = true);
+    } else {
+      setState(() => _isSaving = true);
+    }
+
     final success = await context.read<BusinessProvider>().registerBusiness(
-      businessName: _businessNameController.text.trim(),
-      businessType: _selectedBusinessType,
-      // API only accepts: businessName, businessType, location
-      location: _locationController.text.trim().isNotEmpty
-          ? _locationController.text.trim()
-          : 'Not provided',
-      contactNumber: _contactNumberController.text.trim(),
-      website: _websiteController.text.trim(),
-    );
+          businessName: _businessNameController.text.trim(),
+          businessType: _selectedBusinessType,
+          location: _locationController.text.trim().isNotEmpty
+              ? _locationController.text.trim()
+              : 'Not provided',
+          contactNumber: _contactNumberController.text.trim(),
+          website: _websiteController.text.trim(),
+        );
+
+    if (mounted) {
+      setState(() {
+        _isSaving = false;
+        _isNextLoading = false;
+      });
+    }
 
     if (success && mounted && navigateAfter) {
-      Navigator.pushReplacement(
+      Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => const MainShell()),
+        MaterialPageRoute(builder: (_) => const AddProductScreen()),
       );
     } else if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -77,10 +97,6 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
           icon: const Icon(Icons.close, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'PrepPal',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -89,76 +105,74 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
           child: Form(
             key: _formKey,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Progress bar (3 steps total)
                 Row(
-                  children: List.generate(3, (i) => Expanded(
-                    child: Container(
-                      height: 6,
-                      margin: EdgeInsets.only(right: i < 2 ? 8 : 0),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(3),
-                        color: i <= 2 // All 3 steps are complete/active now
-                            ? const Color(0xFFD35A2A) // TODO: use AppColors.secondary eventually
-                            : const Color(0xFFE8DEF8),
-                      ),
-                    ),
-                  )),
+                  children: List.generate(
+                      3,
+                      (i) => Expanded(
+                            child: Container(
+                              height: 4,
+                              margin: EdgeInsets.only(right: i < 2 ? 8 : 0),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(2),
+                                color: i <= 1
+                                    ? AppColors.secondary
+                                    : AppColors.primary.withValues(alpha: 0.3),
+                              ),
+                            ),
+                          )),
                 ),
                 const SizedBox(height: 32),
 
-                const Center(
-                  child: Text(
-                    'Business details',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                const Text(
+                  'Business details',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 32),
 
                 // Business Name
-                _buildLabel('Business name'),
-                const SizedBox(height: 8),
-                TextFormField(
+                _buildField(
+                  label: 'Business name',
+                  hint: 'Deliciousness delight',
                   controller: _businessNameController,
-                  onChanged: (_) => provider.clearError(),
-                  decoration: _inputDecoration('Deliciousness Delight'),
                   validator: (v) =>
-                      v == null || v.trim().isEmpty ? 'Business name is required' : null,
+                      v == null || v.trim().isEmpty ? 'Required' : null,
+                  onChanged: (_) => provider.clearError(),
                 ),
                 const SizedBox(height: 24),
 
-                // Location (maps to API "location" field)
-                _buildLabel('Location (Optional)'),
-                const SizedBox(height: 8),
-                TextFormField(
+                // Contact Address
+                _buildField(
+                  label: 'Contact address',
+                  hint: '25, Tomash money close, Mushin, Lagos.',
                   controller: _locationController,
-                  maxLines: 2,
                   onChanged: (_) => provider.clearError(),
-                  decoration: _inputDecoration('25, Tomash money close, Mushin, Lagos'),
                 ),
                 const SizedBox(height: 24),
 
                 // Business Type & Contact Number row
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildLabel('Business type'),
+                          const Text(
+                            'Business type',
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w600),
+                          ),
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
                             value: _selectedBusinessType,
-                            // ensure the button fills available space rather than
-                            // sizing itself to its content. prevents the internal
-                            // RenderFlex from collapsing too small and overflowing
-                            // when a long business type string is selected.
                             isExpanded: true,
-                            decoration: _inputDecoration(''),
+                            decoration: _inputDecoration('', isFocused: false),
                             items: _businessTypes
                                 .map((t) => DropdownMenuItem(
                                       value: t,
@@ -166,7 +180,9 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
                                     ))
                                 .toList(),
                             onChanged: (v) {
-                              if (v != null) setState(() => _selectedBusinessType = v);
+                              if (v != null) {
+                                setState(() => _selectedBusinessType = v);
+                              }
                             },
                           ),
                         ],
@@ -174,18 +190,12 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildLabel('Contact number'),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: _contactNumberController,
-                            keyboardType: TextInputType.phone,
-                            onChanged: (_) => provider.clearError(),
-                            decoration: _inputDecoration('+234 801 234 5678'),
-                          ),
-                        ],
+                      child: _buildField(
+                        label: 'Contact number',
+                        hint: '+123 456 7890',
+                        controller: _contactNumberController,
+                        keyboardType: TextInputType.phone,
+                        onChanged: (_) => provider.clearError(),
                       ),
                     ),
                   ],
@@ -193,34 +203,14 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
                 const SizedBox(height: 24),
 
                 // Website
-                _buildLabel('Website (Optional)'),
-                const SizedBox(height: 8),
-                TextFormField(
+                _buildField(
+                  label: 'Website',
+                  hint: 'www.delciousness.ic',
                   controller: _websiteController,
                   keyboardType: TextInputType.url,
                   onChanged: (_) => provider.clearError(),
-                  decoration: _inputDecoration('www.deliciousness.com'),
                 ),
-                const SizedBox(height: 24),
-
-                // Error
-                if (provider.errorMessage != null)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFEBEE),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      provider.errorMessage!,
-                      style: const TextStyle(
-                        color: Color(0xFFB00020),
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: 32),
 
                 // Buttons
                 Row(
@@ -228,17 +218,18 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
                     Expanded(
                       child: PrimaryButton(
                         text: 'Save',
-                        type: ButtonType.tertiary,
+                        type: ButtonType.secondary, // Light green
                         onPressed: () => _submit(navigateAfter: false),
-                        isLoading: provider.isLoading,
+                        isLoading: _isSaving,
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 60), // Larger gap as per mockup
                     Expanded(
                       child: PrimaryButton(
                         text: 'Next',
+                        type: ButtonType.primary, // Dark green
                         onPressed: () => _submit(navigateAfter: true),
-                        isLoading: provider.isLoading,
+                        isLoading: _isNextLoading,
                       ),
                     ),
                   ],
@@ -252,35 +243,66 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
     );
   }
 
-  Widget _buildLabel(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: AppColors.black,
-      ),
+  Widget _buildField({
+    required String label,
+    required String hint,
+    required TextEditingController controller,
+    String? Function(String?)? validator,
+    void Function(String)? onChanged,
+    TextInputType? keyboardType,
+  }) {
+    return Focus(
+      onFocusChange: (hasFocus) => setState(() {}),
+      child: Builder(builder: (context) {
+        final hasFocus = Focus.of(context).hasFocus;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.black,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: controller,
+              keyboardType: keyboardType,
+              onChanged: onChanged,
+              validator: validator,
+              decoration: _inputDecoration(hint, isFocused: hasFocus),
+            ),
+          ],
+        );
+      }),
     );
   }
 
-  InputDecoration _inputDecoration(String hint) {
+  InputDecoration _inputDecoration(String hint, {required bool isFocused}) {
     return InputDecoration(
       hintText: hint,
       hintStyle: const TextStyle(color: AppColors.gray),
       filled: true,
-      fillColor: AppColors.white,
+      fillColor: Colors.white,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: AppColors.gray),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.grey.shade300, width: 1.0),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: AppColors.gray),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.grey.shade200, width: 1.0),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(16),
         borderSide: const BorderSide(color: AppColors.secondary, width: 1.5),
       ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Colors.red, width: 1.5),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
 }

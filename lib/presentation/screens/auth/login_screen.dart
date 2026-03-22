@@ -5,6 +5,7 @@ import 'package:prepal2/presentation/providers/business_provider.dart';
 import 'package:prepal2/presentation/screens/auth/business_details_screen.dart';
 import 'package:prepal2/presentation/screens/main_shell.dart';
 import 'package:prepal2/core/constants/app_colors.dart';
+import 'package:prepal2/presentation/widgets/shared_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -67,10 +68,6 @@ class _LoginScreenState extends State<LoginScreen> {
           icon: const Icon(Icons.close, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'PrepPal',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -88,7 +85,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       const SizedBox(height: 24),
 
-                      Image.asset('assets/logo.png', width: 120, height: 120),
+                      // PrepPal Logo in Circle
+                      Container(
+                        width: 150,
+                        height: 150,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF282324),
+                          shape: BoxShape.circle,
+                        ),
+                        padding: const EdgeInsets.all(20),
+                        child: Image.asset(
+                          'assets/logo.png',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
 
                       const SizedBox(height: 24),
 
@@ -100,22 +110,53 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 8),
 
                       const Text(
-                        'Please input the required information',
-                        style: TextStyle(fontSize: 14, color: Color(0xFF757575)),
+                        'Please input Email and Password',
+                        style: TextStyle(fontSize: 16, color: Color(0xFF757575)),
                       ),
 
                       const SizedBox(height: 32),
 
-                      // Email
-                      _buildLabel('Email address'),
-                      const SizedBox(height: 8),
-                      TextFormField(
+                      // Email/Username
+                      _buildField(
+                        label: 'Email/Username',
+                        hint: 'deliciousness@ggg.ic',
                         controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
+                        subtitle: 'please input username or email address',
                         onChanged: (_) => authProvider.clearError(),
-                        decoration: _inputDecoration('Email address'),
-                        validator: (v) =>
-                            v == null || v.isEmpty ? 'Please enter your email address' : null,
+                        validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Password
+                      _buildField(
+                        label: 'Password',
+                        hint: '******',
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        onChanged: (_) => authProvider.clearError(),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            color: AppColors.black,
+                          ),
+                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        ),
+                        validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                      ),
+
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton(
+                          onPressed: () {}, // Forgot password
+                          child: const Text(
+                            'Forgot password?',
+                            style: TextStyle(
+                              color: Color(0xFF757575),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
                       ),
 
                       const SizedBox(height: 12),
@@ -141,36 +182,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 24),
 
                       // Login button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48, // Standard height
-                        child: ElevatedButton(
-                          onPressed: authProvider.isLoading ? null : _handleLogin,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.secondary, // Green primary button
-                            foregroundColor: AppColors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8), // Standard radius
-                            ),
-                          ),
-                          child: authProvider.isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    color: AppColors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Text(
-                                  'Log in',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                        ),
+                      PrimaryButton(
+                        text: 'Sign in',
+                        onPressed: _handleLogin,
+                        isLoading: authProvider.isLoading,
+                        // Dark gray/Black button for login as per mockup
+                        type: ButtonType.primary, 
                       ),
 
                       const SizedBox(height: 32),
@@ -186,34 +203,74 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildLabel(String text) => Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          text,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.black,
-          ),
-        ),
-      );
-
-  InputDecoration _inputDecoration(String hint) => InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(color: AppColors.gray),
-        filled: true,
-        fillColor: AppColors.white, // Standard white fill
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.gray), // Standard border
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.gray), // Standard border
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.secondary, width: 1.5),
-        ),
-      );
+  Widget _buildField({
+    required String label,
+    required String hint,
+    required TextEditingController controller,
+    String? subtitle,
+    bool obscureText = false,
+    Widget? suffixIcon,
+    void Function(String)? onChanged,
+    String? Function(String?)? validator,
+  }) {
+    return Focus(
+      onFocusChange: (hasFocus) => setState(() {}),
+      child: Builder(builder: (context) {
+        final hasFocus = Focus.of(context).hasFocus;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.black,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: controller,
+              obscureText: obscureText,
+              onChanged: onChanged,
+              validator: validator,
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: const TextStyle(color: AppColors.gray),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide:
+                      const BorderSide(color: AppColors.secondary, width: 1.5),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(color: Colors.red, width: 1.5),
+                ),
+                suffixIcon: suffixIcon,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              ),
+            ),
+            if (subtitle != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: const TextStyle(fontSize: 12, color: Color(0xFF9E9E9E)),
+              ),
+            ],
+          ],
+        );
+      }),
+    );
+  }
 }

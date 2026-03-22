@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:prepal2/presentation/providers/forecast_provider.dart';
+import 'package:prepal2/presentation/providers/inventory_provider.dart';
+import 'package:prepal2/presentation/providers/business_provider.dart';
 import 'package:prepal2/core/constants/app_colors.dart';
 
 class DemandForecastScreen extends StatefulWidget {
@@ -16,7 +18,12 @@ class _DemandForecastScreenState extends State<DemandForecastScreen> {
     super.initState();
     // Load forecast data when screen initializes
     Future.microtask(() {
-      context.read<ForecastProvider>().loadForecastData();
+      final business = context.read<BusinessProvider>().currentBusiness;
+      final products = context.read<InventoryProvider>().allProducts;
+      context.read<ForecastProvider>().loadForecastData(
+            products: products,
+            businessType: business?.businessType ?? 'Cafe',
+          );
     });
   }
 

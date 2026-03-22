@@ -17,9 +17,15 @@ class PrimaryButton extends StatelessWidget {
     this.isLoading = false,
     this.type = ButtonType.primary,
     this.icon,
+    this.backgroundColor,
+    this.textColor,
   });
 
-  Color get _backgroundColor {
+  final Color? backgroundColor;
+  final Color? textColor;
+
+  Color get _getBackgroundColor {
+    if (backgroundColor != null) return backgroundColor!;
     if (onPressed == null && !isLoading) return AppColors.gray.withOpacity(0.5);
     switch (type) {
       case ButtonType.primary:
@@ -31,7 +37,8 @@ class PrimaryButton extends StatelessWidget {
     }
   }
 
-  Color get _textColor {
+  Color get _getTextColor {
+    if (textColor != null) return textColor!;
     switch (type) {
       case ButtonType.primary:
         return AppColors.white;
@@ -50,11 +57,11 @@ class PrimaryButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: _backgroundColor,
-          foregroundColor: _textColor,
+          backgroundColor: _getBackgroundColor,
+          foregroundColor: _getTextColor,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(30),
             side: type == ButtonType.tertiary 
                 ? const BorderSide(color: AppColors.gray) 
                 : BorderSide.none,
@@ -65,7 +72,7 @@ class PrimaryButton extends StatelessWidget {
                 height: 20,
                 width: 20,
                 child: CircularProgressIndicator(
-                  color: _textColor,
+                  color: _getTextColor,
                   strokeWidth: 2,
                 ),
               )
@@ -81,7 +88,7 @@ class PrimaryButton extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: _textColor,
+                      color: _getTextColor,
                     ),
                   ),
                 ],

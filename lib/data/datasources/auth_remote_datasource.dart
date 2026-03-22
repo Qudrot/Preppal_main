@@ -41,6 +41,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String username,
     required String password,
   }) async {
+    // Clear any existing session before signup to avoid 401 from stale tokens
+    await _apiClient.clearAll();
+
     final response = await _apiClient.post(
       ApiConstants.authSignup,
       body: {
