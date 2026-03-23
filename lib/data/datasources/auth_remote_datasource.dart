@@ -86,6 +86,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     );
 
     final body = jsonDecode(response.body) as Map<String, dynamic>;
+    print('DEBUG: Login raw body: $body');
 
     if (response.statusCode == 200) {
       // API returns: { success: true, accessToken: { token: "eyJ..." } }

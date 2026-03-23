@@ -56,7 +56,16 @@ class InventoryProvider extends ChangeNotifier {
 
   // Dashboard computed stats
   List<ProductModel> get lowStockProducts =>
-      _products.where((p) => p.isLowStock).toList();
+      _products.where((p) => p.isLowStock && p.quantityAvailable > 0).toList();
+
+  List<ProductModel> get outOfStockProducts =>
+      _products.where((p) => p.quantityAvailable <= 0).toList();
+
+  List<ProductModel> get optimalProducts =>
+      _products.where((p) => !p.isLowStock && p.quantityAvailable <= p.effectiveThreshold * 3).toList();
+
+  List<ProductModel> get overStockProducts =>
+      _products.where((p) => p.quantityAvailable > p.effectiveThreshold * 3).toList();
 
   List<ProductModel> get expiredProducts =>
       _products.where((p) => p.isExpired).toList();

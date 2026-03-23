@@ -136,30 +136,38 @@ class DashboardProvider extends ChangeNotifier {
   // ── Daily Alerts ────────────────────────────────────────────
   List<DashboardAlert> get allAlerts {
     final alerts = <DashboardAlert>[];
+    final seen = <String>{}; // deduplicate by product id
 
     for (final p in _products) {
-      if (p.isExpired) {
+      // Skip duplicates (same product appearing twice in the list)
+      final key = p.id.isNotEmpty ? p.id : '${p.name}_${p.productionDate.millisecondsSinceEpoch}';
+      if (seen.contains(key)) continue;
+      seen.add(key);
+
+      final hoursLeft = _hoursLeft(p);
+      if (p.isExpired || hoursLeft < 0) {
         alerts.add(DashboardAlert(
-          productName: p.name,
+          productName: p.name.isEmpty ? 'Unnamed product' : p.name,
           message: 'Expired — remove from stock immediately',
           severity: 'High',
         ));
-      } else if (_daysLeft(p) <= 1) {
+      } else if (hoursLeft <= 24) {
+        // Expires within 24 hours
         alerts.add(DashboardAlert(
-          productName: p.name,
-          message: 'Expires in ${_daysLeft(p)} day — use first',
+          productName: p.name.isEmpty ? 'Unnamed product' : p.name,
+          message: 'Expires in ${_daysLeft(p)} day(s) — use first',
           severity: 'High',
         ));
       } else if (p.isLowStock) {
         final needed = (p.effectiveThreshold - p.quantityAvailable).ceil();
         alerts.add(DashboardAlert(
-          productName: p.name,
-          message: 'Prepare $needed ${p.unit.name.toUpperCase()} more',
+          productName: p.name.isEmpty ? 'Unnamed product' : p.name,
+          message: 'Low stock — prepare $needed ${p.unit.name.toUpperCase()} more',
           severity: 'Medium',
         ));
       } else if (p.isExpiringSoon) {
         alerts.add(DashboardAlert(
-          productName: p.name,
+          productName: p.name.isEmpty ? 'Unnamed product' : p.name,
           message: 'Expiring in ${_daysLeft(p)} days — plan ahead',
           severity: 'Low',
         ));
@@ -204,8 +212,15 @@ class DashboardProvider extends ChangeNotifier {
   }
 
   // ── Helpers ─────────────────────────────────────────────────
+  // Returns hours remaining until expiry
+  int _hoursLeft(ProductModel p) {
+    final expiry = p.productionDate.add(Duration(hours: p.shelfLife));
+    return expiry.difference(DateTime.now()).inHours;
+  }
+
+  // Returns full days remaining until expiry
   int _daysLeft(ProductModel p) {
-    final expiry = p.productionDate.add(Duration(days: p.shelfLife));
+    final expiry = p.productionDate.add(Duration(hours: p.shelfLife));
     return expiry.difference(DateTime.now()).inDays;
   }
 

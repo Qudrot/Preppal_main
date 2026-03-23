@@ -15,6 +15,21 @@ class InventoryRemoteDataSourceImpl implements InventoryRemoteDataSource {
 
   InventoryRemoteDataSourceImpl(this._apiClient);
 
+  // Normalize the backend JSON to match the model's expected keys.
+  // The backend uses 'productName' but this model expects 'name'.
+  Map<String, dynamic> _normalizeProduct(Map<String, dynamic> j) {
+    final result = Map<String, dynamic>.from(j);
+    // Map productName → name (and keep productName for compatibility)
+    if (!result.containsKey('name') || (result['name'] as String? ?? '').isEmpty) {
+      result['name'] = result['productName'] ?? result['name'] ?? '';
+    }
+    // Map _id → id
+    if (!result.containsKey('id') || (result['id'] as String? ?? '').isEmpty) {
+      result['id'] = result['_id'] ?? result['id'] ?? '';
+    }
+    return result;
+  }
+
   @override
   Future<List<ProductModel>> getAllProducts() async {
     // Assuming we fetch inventory for the user's selected business.
@@ -34,7 +49,7 @@ class InventoryRemoteDataSourceImpl implements InventoryRemoteDataSource {
       final dynamic rawData = body['data'] ?? body;
       if (rawData is List) {
         return rawData
-            .map((j) => ProductModel.fromJson(j as Map<String, dynamic>))
+            .map((j) => ProductModel.fromJson(_normalizeProduct(j as Map<String, dynamic>)))
             .where((p) => p.isActive)
             .toList();
       }
@@ -66,7 +81,7 @@ class InventoryRemoteDataSourceImpl implements InventoryRemoteDataSource {
 
     if (response.statusCode == 200 || response.statusCode == 201) {
        final data = body['data'] ?? body;
-       return ProductModel.fromJson(data as Map<String, dynamic>);
+       return ProductModel.fromJson(_normalizeProduct(data as Map<String, dynamic>));
     } else {
        throw Exception(body['message'] ?? 'Failed to add product');
     }
@@ -95,7 +110,7 @@ class InventoryRemoteDataSourceImpl implements InventoryRemoteDataSource {
 
     if (response.statusCode == 200 || response.statusCode == 201) {
        final data = body['data'] ?? body;
-       return ProductModel.fromJson(data as Map<String, dynamic>);
+       return ProductModel.fromJson(_normalizeProduct(data as Map<String, dynamic>));
     } else {
        throw Exception(body['message'] ?? 'Failed to update product');
     }

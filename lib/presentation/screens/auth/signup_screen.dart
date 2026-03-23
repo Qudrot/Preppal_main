@@ -118,27 +118,6 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                       const SizedBox(height: 8),
 
-                      // Progress bar (3 steps total)
-                      Row(
-                        children: List.generate(
-                            3,
-                            (i) => Expanded(
-                                  child: Container(
-                                    height: 4,
-                                    margin: EdgeInsets.only(right: i < 2 ? 8 : 0),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(2),
-                                      color: i == 0
-                                          ? AppColors.secondary
-                                          : AppColors.primary.withValues(alpha: 0.3),
-                                    ),
-                                  ),
-                                )),
-                      ),
-                      const SizedBox(height: 16),
-
-                      const SizedBox(height: 8),
-
                       const Text(
                         'Please input the required information',
                         style: TextStyle(

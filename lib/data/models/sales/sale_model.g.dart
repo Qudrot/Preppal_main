@@ -8,18 +8,18 @@ part of 'sale_model.dart';
 
 SaleItemModel _$SaleItemModelFromJson(Map<String, dynamic> json) =>
     SaleItemModel(
-      productId: json['product_id'] as String,
-      productName: json['product_name'] as String,
-      quantitySold: (json['quantity_sold'] as num).toDouble(),
-      unitPrice: (json['unit_price'] as num).toDouble(),
+      productId: json['productId'] as String,
+      productName: json['productName'] as String,
+      quantitySold: SaleItemModel._decodeDouble(json['quantitySold']),
+      unitPrice: SaleItemModel._decodeDouble(json['unitPrice']),
     );
 
 Map<String, dynamic> _$SaleItemModelToJson(SaleItemModel instance) =>
     <String, dynamic>{
-      'product_id': instance.productId,
-      'product_name': instance.productName,
-      'quantity_sold': instance.quantitySold,
-      'unit_price': instance.unitPrice,
+      'productId': instance.productId,
+      'productName': instance.productName,
+      'quantitySold': instance.quantitySold,
+      'unitPrice': instance.unitPrice,
     };
 
 SaleModel _$SaleModelFromJson(Map<String, dynamic> json) => SaleModel(

@@ -72,7 +72,7 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
     if (success && mounted && navigateAfter) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => const AddProductScreen()),
+        MaterialPageRoute(builder: (_) => const AddProductScreen(isOnboarding: true)),
       );
     } else if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -117,7 +117,7 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
                               margin: EdgeInsets.only(right: i < 2 ? 8 : 0),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(2),
-                                color: i <= 1
+                                color: i <= 0
                                     ? AppColors.secondary
                                     : AppColors.primary.withValues(alpha: 0.3),
                               ),

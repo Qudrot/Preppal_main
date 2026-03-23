@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:prepal2/presentation/providers/forecast_provider.dart';
 import 'package:prepal2/presentation/providers/auth_provider.dart';
 import 'package:prepal2/presentation/providers/business_provider.dart';
@@ -10,6 +11,8 @@ import 'package:prepal2/presentation/screens/sales/daily_sales_report_screen.dar
 import 'package:prepal2/presentation/screens/forecast/demand_forecast_screen.dart';
 import 'package:prepal2/presentation/screens/splash/splash_screen.dart';
 import 'package:prepal2/core/constants/app_colors.dart';
+import 'package:prepal2/presentation/widgets/shared_button.dart';
+import 'package:prepal2/presentation/screens/auth/business_details_screen.dart';
 
 // Changed to StatefulWidget so we can call loadSales() on init
 class DashboardScreen extends StatefulWidget {
@@ -46,245 +49,378 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final business = context.watch<BusinessProvider>().currentBusiness;
+    final businessProvider = context.watch<BusinessProvider>();
+    final business = businessProvider.currentBusiness;
     final inventory = context.watch<InventoryProvider>();
     final dashboard = context.watch<DashboardProvider>();
     final forecast = context.watch<ForecastProvider>();
 
-    // Keep dashboard synced whenever inventory rebuilds
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) dashboard.syncInventory(inventory.allProducts);
-    });
+    if (businessProvider.isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: AppColors.secondary)),
+      );
+    }
+
+    if (!businessProvider.hasBusiness) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.storefront_outlined, size: 80, color: Colors.grey[300]),
+                const SizedBox(height: 24),
+                const Text(
+                  'No Business Found',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'It looks like you haven\'t set up your business yet. Let\'s get you started!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 32),
+                PrimaryButton(
+                  text: 'Set Up Business',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const BusinessDetailsScreen()),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              _DashboardHeader(
-                businessName: business?.businessName ?? 'Business',
-                wasteReduction: dashboard.wasteReductionPercent,
-                highRisk: dashboard.highRiskCount,
-                mediumRisk: dashboard.mediumRiskCount,
-                lowRisk: dashboard.lowRiskCount,
-              ),
-              const SizedBox(height: 16),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    //Stats Row
-                    _StatsRow(inventory: inventory),
+                    // Header
+                    _DashboardHeader(
+                      businessName: business?.businessName ?? 'Business',
+                      wasteReduction: dashboard.wasteReductionPercent,
+                      highRisk: dashboard.highRiskCount,
+                      mediumRisk: dashboard.mediumRiskCount,
+                      lowRisk: dashboard.lowRiskCount,
+                    ),
                     const SizedBox(height: 16),
 
-                    //Today's Demand Forecast
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          '7-day demand forecast',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const DemandForecastScreen(),
-                              ),
-                            );
-                          },
-                          child: const Text(
-                            'View all (6)',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.secondary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 4,
-                          ),
-                        ],
-                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Wrap(
-                            alignment: WrapAlignment.spaceBetween,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            spacing: 12,
-                            runSpacing: 4,
+                          //Stats Row
+                          _StatsRow(inventory: inventory),
+                          const SizedBox(height: 16),
+
+                          //Today's Demand Forecast
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('Predicted Sales', overflow: TextOverflow.ellipsis),
-                              _buildLegendItem(label: 'Predicted Sales', color: AppColors.secondary),
-                              _buildLegendItem(label: 'Actual Sales', color: const Color(0xFFFFC107)),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const DemandForecastScreen(),
-                                  ),
-                                );
-                              },
-                              child: Text(
-                                'View all (6)',
+                              const Text(
+                                '7-day demand forecast',
                                 style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.red[400],
+                                  fontSize: 16,
                                   fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
                                 ),
                               ),
+                              GestureDetector(
+                                onTap: forecast.productForecasts.isEmpty ? null : () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const DemandForecastScreen(),
+                                    ),
+                                  );
+                                },
+                                child: forecast.productForecasts.isEmpty
+                                    ? const SizedBox.shrink()
+                                    : Text(
+                                        'View all (${forecast.productForecasts.length})',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.secondary,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 4,
+                                ),
+                              ],
                             ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Wrap(
+                                  alignment: WrapAlignment.spaceBetween,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  spacing: 12,
+                                  runSpacing: 4,
+                                  children: [
+                                    const Text('Predicted Sales', overflow: TextOverflow.ellipsis),
+                                    _buildLegendItem(label: 'Predicted Sales', color: AppColors.secondary),
+                                    _buildLegendItem(label: 'Actual Sales', color: const Color(0xFFFFC107)),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: forecast.productForecasts.isEmpty
+                                      ? const SizedBox.shrink()
+                                      : GestureDetector(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) => const DemandForecastScreen(),
+                                              ),
+                                            );
+                                          },
+                                          child: Text(
+                                            'View all (${forecast.productForecasts.length})',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.red[400],
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                ),
+                                const SizedBox(height: 8),
+                                SizedBox(
+                                  height: 180,
+                                  child: forecast.sevenDayForecast.isEmpty
+                                      ? const Center(child: Text('No forecast data available', style: TextStyle(color: Colors.grey, fontSize: 13)))
+                                      : LineChart(_buildForecastChartData(forecast.sevenDayForecast)),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          //Daily Alert Section 
+                          _buildSectionHeader(
+                            title: 'Daily Alert',
+                            actionText: 'View all (${dashboard.dailyAlerts.length})',
                           ),
                           const SizedBox(height: 8),
-                          SizedBox(
-                            height: 150,
-                            child: CustomPaint(
-                              size: const Size(double.infinity, 150),
-                              painter: _LineChartPainter(data: forecast.sevenDayForecast),
-                            ),
+                          if (dashboard.dailyAlerts.isEmpty)
+                            _buildEmptyCard('✅ No alerts today!')
+                          else
+                            ...dashboard.dailyAlerts.map((alert) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: _buildAlertCard(
+                                    title: alert.productName,
+                                    subtitle: alert.message,
+                                    severity: alert.severity,
+                                  ),
+                                )),
+
+                          const SizedBox(height: 16),
+
+                          // Smart Recommendation Section
+                          _buildSectionHeader(
+                            title: 'Smart Recommendation',
+                            actionText: 'View all (${dashboard.smartRecommendations.length})',
                           ),
-                          // X-axis labels
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: forecast.sevenDayForecast.isNotEmpty
-                                  ? forecast.sevenDayForecast
-                                      .map((f) => Text(
-                                            f['day'].toString(),
-                                            style: const TextStyle(fontSize: 10, color: Colors.grey),
-                                          ))
-                                      .toList()
-                                  : [const Text('No data', style: TextStyle(fontSize: 10, color: Colors.grey))],
-                            ),
-                          ),
+                          const SizedBox(height: 8),
+                          if (dashboard.smartRecommendations.isEmpty)
+                            _buildEmptyCard('✅ All stock levels look good!')
+                          else
+                            ...dashboard.smartRecommendations.map((rec) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: _buildRecommendationCard(
+                                    title: rec.productName,
+                                    subtitle: rec.message,
+                                  ),
+                                )),
+
+                          const SizedBox(height: 16),
+
+                          // //Today's Sales Summary
+                          // _buildSalesSummaryCard(dashboard),
+
+                          const SizedBox(height: 24),
                         ],
                       ),
                     ),
-
-                    const SizedBox(height: 16),
-
-                    //Daily Alert Section 
-                 
-                    _buildSectionHeader(
-                      title: 'Daily Alert',
-                      actionText: 'View all (${dashboard.dailyAlerts.length})',
-                    ),
-                    const SizedBox(height: 8),
-                    if (dashboard.dailyAlerts.isEmpty)
-                      _buildEmptyCard('✅ No alerts today!')
-                    else
-                      ...dashboard.dailyAlerts.map((alert) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: _buildAlertCard(
-                              title: alert.productName,
-                              subtitle: alert.message,
-                              severity: alert.severity,
-                            ),
-                          )),
-
-                    const SizedBox(height: 16),
-
-                    // ── Smart Recommendation Section
-                   
-                    _buildSectionHeader(
-                      title: 'Smart Recommendation',
-                      actionText: 'View all (${dashboard.smartRecommendations.length})',
-                    ),
-                    const SizedBox(height: 8),
-                    if (dashboard.smartRecommendations.isEmpty)
-                      _buildEmptyCard('✅ All stock levels look good!')
-                    else
-                      ...dashboard.smartRecommendations.map((rec) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: _buildRecommendationCard(
-                              title: rec.productName,
-                              subtitle: rec.message,
-                            ),
-                          )),
-
-                    const SizedBox(height: 16),
-
-                    //Today's Sales Summary
-    
-                    _buildSalesSummaryCard(dashboard),
-
-                    const SizedBox(height: 24),
-
-                    //Bottom Action Buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildActionButton(
-                            icon: Icons.pie_chart_outline,
-                            title: 'Today\'s report\nand insights',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const DailySalesReportScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildActionButton(
-                            icon: Icons.access_time,
-                            title: 'Input today\'s\nsales',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const DailySalesReportScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+            // Bottom Action Buttons
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _buildActionButton(
+                      icon: Icons.pie_chart_outline,
+                      title: 'Today\'s report\nand insights',
+                      onTap: () {
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder: (_) => const DailySalesReportScreen(),
+                        //   ),
+                        // );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildActionButton(
+                      icon: Icons.access_time,
+                      title: 'Input today\'s\nsales',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const DailySalesReportScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
+  // ── Line Chart Configuration (fl_chart) ──────────────────────────
+  LineChartData _buildForecastChartData(List<Map<String, dynamic>> data) {
+    List<FlSpot> actualSpots = [];
+    List<FlSpot> predictedSpots = [];
+    double maxX = (data.length - 1).toDouble();
+    double maxY = 1;
 
+    for (int i = 0; i < data.length; i++) {
+      final actual = (data[i]['actual'] ?? 0).toDouble();
+      final predicted = (data[i]['predicted'] ?? 0).toDouble();
+      if (actual > maxY) maxY = actual;
+      if (predicted > maxY) maxY = predicted;
+
+      actualSpots.add(FlSpot(i.toDouble(), actual));
+      predictedSpots.add(FlSpot(i.toDouble(), predicted));
+    }
+    
+    // Add 10% padding to maxY
+    maxY = maxY * 1.1;
+
+    return LineChartData(
+      gridData: FlGridData(
+        show: true,
+        drawVerticalLine: false,
+        horizontalInterval: maxY / 4 > 0 ? maxY / 4 : 1,
+        getDrawingHorizontalLine: (value) {
+          return FlLine(color: Colors.grey.shade200, strokeWidth: 1);
+        },
+      ),
+      titlesData: FlTitlesData(
+        show: true,
+        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            reservedSize: 22,
+            interval: 1,
+            getTitlesWidget: (value, meta) {
+              final index = value.toInt();
+              if (index >= 0 && index < data.length) {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    data[index]['day'].toString(),
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 10),
+                  ),
+                );
+              }
+              return const SizedBox();
+            },
+          ),
+        ),
+        leftTitles: const AxisTitles(
+          sideTitles: SideTitles(showTitles: false), // Hide left titles to match mockup
+        ),
+      ),
+      borderData: FlBorderData(show: false),
+      minX: 0,
+      maxX: maxX,
+      minY: 0,
+      maxY: maxY,
+      lineBarsData: [
+        // Actual Sales Line
+        LineChartBarData(
+          spots: actualSpots,
+          isCurved: true,
+          color: const Color(0xFFFFC107),
+          barWidth: 3,
+          isStrokeCapRound: true,
+          dotData: FlDotData(show: actualSpots.length == 1),
+          belowBarData: BarAreaData(
+            show: true,
+            color: const Color(0xFFFFC107).withOpacity(0.1),
+          ),
+        ),
+        // Predicted Sales Line
+        LineChartBarData(
+          spots: predictedSpots,
+          isCurved: true,
+          color: AppColors.secondary,
+          barWidth: 3,
+          isStrokeCapRound: true,
+          dotData: FlDotData(show: predictedSpots.length == 1),
+          belowBarData: BarAreaData(
+            show: true,
+            color: AppColors.secondary.withOpacity(0.1),
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _buildSectionHeader({
     required String title,
@@ -385,52 +521,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // NEW: real sales card
-  Widget _buildSalesSummaryCard(DashboardProvider dashboard) {
-    return GestureDetector(
-      onTap: () => Navigator.push(context,
-          MaterialPageRoute(builder: (_) => const DailySalesReportScreen())),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2))
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Today Sales',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
-            const SizedBox(height: 8),
-            dashboard.isLoadingSales
-                ? const SizedBox(height: 28, child: CircularProgressIndicator(strokeWidth: 2))
-                : Text(
-                    // REAL value from API
-                    dashboard.todayRevenueFormatted,
-                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87),
-                  ),
-            const SizedBox(height: 8),
-            Row(children: [
-              Icon(
-                dashboard.revenueIsUp ? Icons.arrow_upward : Icons.arrow_downward,
-                color: dashboard.revenueIsUp ? Colors.green : Colors.red,
-                size: 14,
-              ),
-              const SizedBox(width: 4),
-              // ✅ REAL change % vs yesterday
-              Text(dashboard.revenueChangeLabel,
-                  style: TextStyle(
-                      fontSize: 12,
-                      color: dashboard.revenueIsUp ? Colors.green : Colors.red)),
-            ]),
-          ],
-        ),
-      ),
-    );
-  }
+  // Widget _buildSalesSummaryCard(DashboardProvider dashboard) {
+  //   return GestureDetector(
+  //     onTap: () => Navigator.push(context,
+  //         MaterialPageRoute(builder: (_) => const DailySalesReportScreen())),
+  //     child: Container(
+  //       width: double.infinity,
+  //       padding: const EdgeInsets.all(16),
+  //       decoration: BoxDecoration(
+  //         color: Colors.white,
+  //         borderRadius: BorderRadius.circular(12),
+  //         boxShadow: [
+  //           BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2))
+  //         ],
+  //       ),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           const Text('Today Sales',
+  //               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
+  //           const SizedBox(height: 8),
+  //           dashboard.isLoadingSales
+  //               ? const SizedBox(height: 28, child: CircularProgressIndicator(strokeWidth: 2))
+  //               : Text(
+  //                   // REAL value from API
+  //                   dashboard.todayRevenueFormatted,
+  //                   style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87),
+  //                 ),
+  //           const SizedBox(height: 8),
+  //           Row(children: [
+  //             Icon(
+  //               dashboard.revenueIsUp ? Icons.arrow_upward : Icons.arrow_downward,
+  //               color: dashboard.revenueIsUp ? Colors.green : Colors.red,
+  //               size: 14,
+  //             ),
+  //             const SizedBox(width: 4),
+  //             // REAL change % vs yesterday
+  //             Text(dashboard.revenueChangeLabel,
+  //                 style: TextStyle(
+  //                     fontSize: 12,
+  //                     color: dashboard.revenueIsUp ? Colors.green : Colors.red)),
+  //           ]),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildEmptyCard(String message) {
     return Container(
@@ -449,16 +585,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
         decoration: BoxDecoration(
-          color: Colors.red[50],
+          color: AppColors.secondary,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.red[100]!),
+          //border: Border.all(color: Colors.red[100]!),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: Colors.black87, size: 20),
+            Icon(icon, color: Colors.white, size: 20),
             const SizedBox(width: 8),
-            Text(title, textAlign: TextAlign.start, style: const TextStyle(fontSize: 12)),
+            Text(title, textAlign: TextAlign.start, style: const TextStyle(fontSize: 12, color: Colors.white)),
           ],
         ),
       ),
@@ -471,10 +607,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
 class _DashboardHeader extends StatelessWidget {
   final String businessName;
-  final String wasteReduction; // ✅ was hardcoded '35%'
-  final int highRisk;          // ✅ was hardcoded '1'
-  final int mediumRisk;        // ✅ was hardcoded '0'
-  final int lowRisk;           // ✅ was hardcoded '3'
+  final String wasteReduction; // was hardcoded '35%'
+  final int highRisk;          // was hardcoded '1'
+  final int mediumRisk;        // was hardcoded '0'
+  final int lowRisk;           // was hardcoded '3'
 
   const _DashboardHeader({
     required this.businessName,
@@ -721,96 +857,4 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-// ── Chart Painter (unchanged) ─────────────────────────────────
 
-class _LineChartPainter extends CustomPainter {
-  final List<Map<String, dynamic>> data;
-
-  _LineChartPainter({required this.data});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (data.isEmpty) {
-      final textPainter = TextPainter(
-        text: const TextSpan(
-          text: 'No data available',
-          style: TextStyle(color: Colors.grey, fontSize: 12),
-        ),
-        textDirection: TextDirection.ltr,
-      );
-      textPainter.layout();
-      textPainter.paint(
-        canvas,
-        Offset((size.width - textPainter.width) / 2, size.height / 2),
-      );
-      return;
-    }
-
-    final paintLine1 = Paint()..color = AppColors.secondary..strokeWidth = 2..style = PaintingStyle.stroke;
-    final paintLine2 = Paint()..color = const Color(0xFFFFC107)..strokeWidth = 2..style = PaintingStyle.stroke;
-    final paintDots1 = Paint()..color = AppColors.secondary..style = PaintingStyle.fill;
-    final paintDots2 = Paint()..color = const Color(0xFFFFC107)..style = PaintingStyle.fill;
-
-    final path1 = Path();
-    final path2 = Path();
-
-    double maxActual = 1;
-    double maxPredicted = 1;
-
-    for (var point in data) {
-      final actual = (point['actual'] ?? 0).toDouble();
-      final predicted = (point['predicted'] ?? 0).toDouble();
-      if (actual > maxActual) maxActual = actual;
-      if (predicted > maxPredicted) maxPredicted = predicted;
-    }
-
-    maxActual = maxActual * 1.1;
-    maxPredicted = maxPredicted * 1.1;
-
-    final List<Offset> points1 = [];
-    final List<Offset> points2 = [];
-
-    for (int i = 0; i < data.length; i++) {
-      final actual = (data[i]['actual'] ?? 0).toDouble();
-      final predicted = (data[i]['predicted'] ?? 0).toDouble();
-
-      final x = (i / (data.length - 1)) * size.width;
-      final y1 = size.height - (actual / maxActual) * size.height;
-      final y2 = size.height - (predicted / maxPredicted) * size.height;
-
-      points1.add(Offset(x, y1));
-      points2.add(Offset(x, y2));
-    }
-
-    if (points1.isNotEmpty) {
-      path1.moveTo(points1[0].dx, points1[0].dy);
-      for (int i = 1; i < points1.length; i++) {
-        final p0 = points1[i - 1];
-        final p1 = points1[i];
-        path1.cubicTo(p0.dx + (p1.dx - p0.dx) / 2, p0.dy, p0.dx + (p1.dx - p0.dx) / 2, p1.dy, p1.dx, p1.dy);
-      }
-    }
-
-    if (points2.isNotEmpty) {
-      path2.moveTo(points2[0].dx, points2[0].dy);
-      for (int i = 1; i < points2.length; i++) {
-        final p0 = points2[i - 1];
-        final p1 = points2[i];
-        path2.cubicTo(p0.dx + (p1.dx - p0.dx) / 2, p0.dy, p0.dx + (p1.dx - p0.dx) / 2, p1.dy, p1.dx, p1.dy);
-      }
-    }
-
-    canvas.drawPath(path1, paintLine1);
-    canvas.drawPath(path2, paintLine2);
-
-    for (var p in points1) { canvas.drawCircle(p, 3, paintDots1); }
-    for (var p in points2) { canvas.drawCircle(p, 3, paintDots2); }
-
-    final axisPaint = Paint()..color = Colors.black..strokeWidth = 1;
-    canvas.drawLine(const Offset(0, 0), Offset(0, size.height), axisPaint);
-    canvas.drawLine(Offset(0, size.height), Offset(size.width, size.height), axisPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}

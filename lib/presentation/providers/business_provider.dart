@@ -24,8 +24,8 @@ class BusinessModel {
     return BusinessModel(
       id: map['id'] as String? ?? '',
       userId: map['userId'] as String? ?? '',
-      businessName: map['businessName'] as String? ?? '',
-      businessType: map['businessType'] as String? ?? '',
+      businessName: (map['businessName'] as String?) ?? (map['name'] as String?) ?? '',
+      businessType: (map['businessType'] as String?) ?? (map['type'] as String?) ?? '',
       location: map['location'] as String? ?? '',
       createdAt: map['createdAt'] as String?,
     );

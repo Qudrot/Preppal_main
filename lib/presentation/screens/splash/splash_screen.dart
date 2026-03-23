@@ -15,16 +15,28 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  bool _showGreenBg = false;
+
   @override
   void initState() {
     super.initState();
-    _checkAuthAndNavigate();
+    _playAnimationAndNavigate();
   }
 
-  Future<void> _checkAuthAndNavigate() async {
+  Future<void> _playAnimationAndNavigate() async {
     final authProvider = context.read<AuthProvider>();
+    
+    // 1. Show white background for 1 second
+    await Future.delayed(const Duration(seconds: 1));
+    if (!mounted) return;
+    
+    // 2. Trigger transition to green
+    setState(() {
+      _showGreenBg = true;
+    });
+
+    // 3. Wait for auth state to resolve (with timeout)
     final startedAt = DateTime.now();
-    const minSplash = Duration(milliseconds: 800);
     const maxWait = Duration(seconds: 3);
 
     while ((authProvider.status == AuthStatus.initial ||
@@ -34,10 +46,12 @@ class _SplashScreenState extends State<SplashScreen> {
       if (!mounted) return;
     }
 
+    // 4. Ensure we show the green screen for at least 1.5 seconds so the animation finishes
     final elapsed = DateTime.now().difference(startedAt);
-    if (elapsed < minSplash) {
-      await Future.delayed(minSplash - elapsed);
+    if (elapsed < const Duration(milliseconds: 1500)) {
+      await Future.delayed(const Duration(milliseconds: 1500) - elapsed);
     }
+    
     if (!mounted) return;
 
     Navigator.of(context).pushReplacement(
@@ -52,19 +66,24 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'assets/logo.png',
-              width: 150,
-              height: 150,
+      body: AnimatedContainer(
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOut,
+        color: _showGreenBg ? AppColors.secondary : Colors.white,
+        child: Center(
+          child: Container(
+            width: 220,
+            height: 220,
+            decoration: const BoxDecoration(
+              color: Color(0xFF282324), // Dark grey
+              shape: BoxShape.circle,
             ),
-            const SizedBox(height: 24),
-            const CircularProgressIndicator(color: AppColors.secondary),
-          ],
+            padding: const EdgeInsets.all(32),
+            child: Image.asset(
+              'assets/logo.png',
+              fit: BoxFit.contain,
+            ),
+          ),
         ),
       ),
     );

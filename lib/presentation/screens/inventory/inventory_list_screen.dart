@@ -32,21 +32,21 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
   }
 
   // ── Stock classification helpers ───────────────────────────
-  double _optimal(ProductModel p) => (p.lowStockThreshold ?? 10) * 2;
+  double _optimal(ProductModel p) => p.effectiveThreshold * 2;
 
   bool _isOverStock(ProductModel p) =>
       p.quantityAvailable > _optimal(p);
 
   bool _isOptimalStock(ProductModel p) =>
-      p.quantityAvailable > (p.lowStockThreshold ?? 10) &&
+      p.quantityAvailable > p.effectiveThreshold &&
       p.quantityAvailable <= _optimal(p);
 
   bool _isCritical(ProductModel p) =>
-      p.quantityAvailable <= (p.lowStockThreshold ?? 10) * 0.25 &&
+      p.quantityAvailable <= p.effectiveThreshold * 0.25 &&
       p.quantityAvailable > 0;
 
   bool _isLow(ProductModel p) =>
-      p.quantityAvailable <= (p.lowStockThreshold ?? 10) && !_isCritical(p);
+      p.quantityAvailable <= p.effectiveThreshold && !_isCritical(p);
 
   String _statusLabel(ProductModel p) {
     if (_isCritical(p)) return 'Critical';
@@ -74,10 +74,10 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
         });
       } else if (_isLow(p)) {
         insights.add({
-          'message': 'Alert message',
-          'product': p.name,
-          'label': 'Low',
-        });
+            'message': 'Low stock: ${p.name} needs restocking soon',
+            'product': p.name,
+            'label': 'Low',
+          });
       } else if (_isOverStock(p)) {
         insights.add({
           'message': '${p.name} is overstocked',

@@ -15,7 +15,7 @@ class AppColors {
   // Alerts
   static const Color darkRed = Color(0xFFBB0A21);
   static const Color lightRed = Color(0xFFFF928B);
-  static const Color darkGreen = Color(0xFF14591D);
+  static const Color darkGreen = Color(0xFF14591D); 
   static const Color lightGreen = Color(0xFFE0F8D1); // Same as primary
   static const Color lightYellow = Color(0xFFFFE294);
   static const Color fieldPurple = Color(0xFFE8DEF8);

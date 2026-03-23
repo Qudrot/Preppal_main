@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:http/http.dart' as http_client;
 import 'package:prepal2/core/network/api_client.dart';
 import 'package:prepal2/core/network/api_constants.dart';
 
@@ -58,17 +59,37 @@ class BusinessRemoteDataSourceImpl implements BusinessRemoteDataSource {
 
   @override
   Future<List<Map<String, dynamic>>> getAllBusinesses() async {
-    final response = await _apiClient.get(ApiConstants.businessGetAll);
-    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    http_client.Response response = await _apiClient.get(ApiConstants.businessGetAll);
+    Map<String, dynamic> body;
 
-    // The server returns 404 with a message like "Error fetching business:
-    // Business not found" when the user has not created any businesses yet.
+    try {
+      body = jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      body = {};
+    }
+
+    if (response.statusCode == 404) {
+      // Try /api/v1/business/user as a common alternative for listing
+      response = await _apiClient.get('/api/v1/business/user');
+      if (response.statusCode == 404) {
+        // Last resort: Return empty list if no route found to allow onboarding
+        print('DEBUG: No business list route found (/api/v1/business or /api/v1/business/user)');
+        return [];
+      }
+      try {
+        body = jsonDecode(response.body) as Map<String, dynamic>;
+      } catch (_) {
+        return [];
+      }
+    }
+
+    // The server returns 404 when the user has not created any businesses yet.
     // Treat that as an empty list so the UI can ask for business details.
     if (response.statusCode == 404 || body['success'] == false) {
       return [];
     }
 
-    if (response.statusCode == 200 && body['success'] == true) {
+    if (response.statusCode == 200 && (body['success'] == true || body['data'] != null)) {
       final rawData = body['data'];
 
       List<dynamic> list;
@@ -108,9 +129,13 @@ class BusinessRemoteDataSourceImpl implements BusinessRemoteDataSource {
     required String id,
     required Map<String, dynamic> updates,
   }) async {
+    final mappedUpdates = Map<String, dynamic>.from(updates);
+    // Maintain internal keys for now as the backend explicitly validated
+    // businessName and businessType in the latest logs.
+
     final response = await _apiClient.put(
       ApiConstants.businessUpdate(id),
-      body: updates,
+      body: mappedUpdates,
     );
     final body = jsonDecode(response.body) as Map<String, dynamic>;
 

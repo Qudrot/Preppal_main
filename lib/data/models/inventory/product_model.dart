@@ -7,17 +7,17 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'product_model.g.dart';
 
-// All available product categories (from wireframe dropdown)
+// All available product categories (from Daily Sales Report screen)
 enum ProductCategory {
   @JsonValue('Beverages') beverages,
   @JsonValue('Dairy') dairy,
-  @JsonValue('Snacks') snacks,
+  @JsonValue('Dish') dish,
+  @JsonValue('Drink') drink,
+  @JsonValue('Sauce') sauce,
+  @JsonValue('Soup') soup,
+  @JsonValue('Pasteries') pasteries,
   @JsonValue('Produce') produce,
-  @JsonValue('Bakery') bakery,
-  @JsonValue('Meat') meat,
-  @JsonValue('Spices') spices,
-  @JsonValue('Frozen') frozen,
-  @JsonValue('Pastries') pastries,
+  @JsonValue('Water') water,
   @JsonValue('Others') others,
 }
 
@@ -40,6 +40,30 @@ class ProductModel {
     return DateTime(2020, 1, 1);
   }
 
+  static double _decodeDouble(Object? raw) {
+    if (raw == null) return 0.0;
+    if (raw is num) return raw.toDouble();
+    if (raw is String) return double.tryParse(raw) ?? 0.0;
+    return 0.0;
+  }
+
+  static double? _decodeDoubleOptional(Object? raw) {
+    if (raw == null) return null;
+    if (raw is num) return raw.toDouble();
+    if (raw is String) return double.tryParse(raw);
+    return null;
+  }
+
+  static int _decodeInt(Object? raw) {
+    if (raw == null) return 0;
+    if (raw is num) return raw.toInt();
+    if (raw is String) {
+      // Handle cases where int might be sent as "12.0"
+      return double.tryParse(raw)?.toInt() ?? 0;
+    }
+    return 0;
+  }
+
   @JsonKey(defaultValue: '')
   final String id;
   @JsonKey(defaultValue: '')
@@ -47,20 +71,22 @@ class ProductModel {
   @JsonKey(defaultValue: ProductCategory.others, unknownEnumValue: ProductCategory.others)
   final ProductCategory category;
 
-  @JsonKey(name: 'production_date', fromJson: _decodeProdDate)
+  @JsonKey(name: 'productionDate', fromJson: _decodeProdDate)
   final DateTime productionDate;
 
-  @JsonKey(name: 'shelf_life', defaultValue: 0)
-  final int shelfLife; // number of hours product remains good after production
+  @JsonKey(name: 'shelf', fromJson: _decodeInt)
+  final int shelfLife; // Backend uses 'shelf' for shelf-life hours
 
-  @JsonKey(name: 'quantity_available', defaultValue: 0.0)
+  int get shelfLifeDays => (shelfLife / 24).round();
+
+  @JsonKey(name: 'quantityAvailable', fromJson: _decodeDouble)
   final double quantityAvailable;
 
-  @JsonKey(defaultValue: 0.0)
+  @JsonKey(fromJson: _decodeDouble)
   final double price;
 
-  @JsonKey(defaultValue: 0.0)
-  final double shelf;
+  @JsonKey(fromJson: _decodeDouble)
+  final double shelf; // Note: historically physical shelf, now often unused
 
   @JsonKey(defaultValue: ProductUnit.pcs, unknownEnumValue: ProductUnit.pcs)
   final ProductUnit unit;
@@ -73,10 +99,10 @@ class ProductModel {
 
   // Low stock threshold — user defined per product
   // If null, falls back to the global fixed threshold (10)
-  @JsonKey(name: 'low_stock_threshold')
+  @JsonKey(name: 'lowStockThreshold', fromJson: _decodeDoubleOptional)
   final double? lowStockThreshold;
 
-  @JsonKey(name: 'is_active', defaultValue: true)
+  @JsonKey(name: 'isActive', defaultValue: true)
   final bool isActive;
 
   const ProductModel({
@@ -87,7 +113,6 @@ class ProductModel {
     required this.shelfLife,
     required this.quantityAvailable,
     required this.price,
-    // shelf is not shown in the UI, default to zero if caller doesn't care
     this.shelf = 0,
     required this.unit,
     this.currency = 'NGN',
@@ -169,8 +194,7 @@ class ProductModel {
       'productName': name,
       'quantityAvailable': quantityAvailable,
       'price': price,
-      // use shelfLife here (should be >=0). we still clamp negative just in
-      // case, although UI validation normally prevents it.
+      // use shelfLife here (should be >=0).
       'shelf': shelfLife < 0 ? 0 : shelfLife,
       // backend expects date-only string (YYYY-MM-DD)
       'productionDate': productionDate.toIso8601String().split('T').first,

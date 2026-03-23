@@ -16,11 +16,11 @@ ProductModel _$ProductModelFromJson(Map<String, dynamic> json) => ProductModel(
         unknownValue: ProductCategory.others,
       ) ??
       ProductCategory.others,
-  productionDate: ProductModel._decodeProdDate(json['production_date']),
-  shelfLife: (json['shelf_life'] as num?)?.toInt() ?? 0,
-  quantityAvailable: (json['quantity_available'] as num?)?.toDouble() ?? 0.0,
-  price: (json['price'] as num?)?.toDouble() ?? 0.0,
-  shelf: (json['shelf'] as num?)?.toDouble() ?? 0.0,
+  productionDate: ProductModel._decodeProdDate(json['productionDate']),
+  shelfLife: ProductModel._decodeInt(json['shelfLife']),
+  quantityAvailable: ProductModel._decodeDouble(json['quantityAvailable']),
+  price: ProductModel._decodeDouble(json['price']),
+  shelf: json['shelf'] == null ? 0 : ProductModel._decodeDouble(json['shelf']),
   unit:
       $enumDecodeNullable(
         _$ProductUnitEnumMap,
@@ -29,8 +29,10 @@ ProductModel _$ProductModelFromJson(Map<String, dynamic> json) => ProductModel(
       ) ??
       ProductUnit.pcs,
   currency: json['currency'] as String? ?? 'NGN',
-  lowStockThreshold: (json['low_stock_threshold'] as num?)?.toDouble(),
-  isActive: json['is_active'] as bool? ?? true,
+  lowStockThreshold: ProductModel._decodeDoubleOptional(
+    json['lowStockThreshold'],
+  ),
+  isActive: json['isActive'] as bool? ?? true,
 );
 
 Map<String, dynamic> _$ProductModelToJson(ProductModel instance) =>
@@ -38,26 +40,27 @@ Map<String, dynamic> _$ProductModelToJson(ProductModel instance) =>
       'id': instance.id,
       'name': instance.name,
       'category': _$ProductCategoryEnumMap[instance.category]!,
-      'production_date': instance.productionDate.toIso8601String(),
-      'shelf_life': instance.shelfLife,
-      'quantity_available': instance.quantityAvailable,
+      'productionDate': instance.productionDate.toIso8601String(),
+      'shelfLife': instance.shelfLife,
+      'quantityAvailable': instance.quantityAvailable,
       'price': instance.price,
       'shelf': instance.shelf,
       'unit': _$ProductUnitEnumMap[instance.unit]!,
       'currency': instance.currency,
-      'low_stock_threshold': instance.lowStockThreshold,
-      'is_active': instance.isActive,
+      'lowStockThreshold': instance.lowStockThreshold,
+      'isActive': instance.isActive,
     };
 
 const _$ProductCategoryEnumMap = {
   ProductCategory.beverages: 'Beverages',
   ProductCategory.dairy: 'Dairy',
-  ProductCategory.snacks: 'Snacks',
+  ProductCategory.dish: 'Dish',
+  ProductCategory.drink: 'Drink',
+  ProductCategory.sauce: 'Sauce',
+  ProductCategory.soup: 'Soup',
+  ProductCategory.pasteries: 'Pasteries',
   ProductCategory.produce: 'Produce',
-  ProductCategory.bakery: 'Bakery',
-  ProductCategory.meat: 'Meat',
-  ProductCategory.spices: 'Spices',
-  ProductCategory.frozen: 'Frozen',
+  ProductCategory.water: 'Water',
   ProductCategory.others: 'Others',
 };
 

@@ -49,8 +49,10 @@ class ForecastRemoteDataSourceImpl implements ForecastRemoteDataSource {
         'price': price,
         'shelf_life_hours': shelfLifeHours,
         'starting_date': startingDate,
-        'weather_forecast': ['Sunny'], // list as per ML requirements
-        'holiday_flags': [0], // list as per ML requirements
+        // ML API requires exactly 7 values (one per forecast day).
+        // Valid weather values: 'Clear' or 'Rainy' only.
+        'weather_forecast': ['Clear', 'Clear', 'Clear', 'Clear', 'Clear', 'Clear', 'Clear'],
+        'holiday_flags': [0, 0, 0, 0, 0, 0, 0],
       },
     );
 
@@ -75,8 +77,8 @@ class ForecastRemoteDataSourceImpl implements ForecastRemoteDataSource {
         'price': 0.0,
         'shelf_life_hours': 24,
         'starting_date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
-        'weather_forecast': ['Sunny'],
-        'holiday_flags': [0],
+        'weather_forecast': ['Clear', 'Clear', 'Clear', 'Clear', 'Clear', 'Clear', 'Clear'],
+        'holiday_flags': [0, 0, 0, 0, 0, 0, 0],
       },
     );
 

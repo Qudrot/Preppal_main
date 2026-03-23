@@ -9,7 +9,14 @@ import 'package:intl/intl.dart';
 import 'package:prepal2/data/models/inventory/product_model.dart';
 
 class DailySalesReportScreen extends StatefulWidget {
-  const DailySalesReportScreen({super.key});
+  final bool isOnboarding;
+  final ProductModel? initialProduct;
+
+  const DailySalesReportScreen({
+    super.key,
+    this.isOnboarding = false,
+    this.initialProduct,
+  });
 
   @override
   State<DailySalesReportScreen> createState() => _DailySalesReportScreenState();
@@ -17,7 +24,7 @@ class DailySalesReportScreen extends StatefulWidget {
 
 class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
   final _formKey = GlobalKey<FormState>();
-  final List<_SalesEntry> _salesEntries = [_SalesEntry()];
+  late final List<_SalesEntry> _salesEntries;
 
   bool _isSaving = false;
   bool _isSubmitLoading = false;
@@ -25,8 +32,13 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
   @override
   void initState() {
     super.initState();
+    _salesEntries = [_SalesEntry(initialProduct: widget.initialProduct)];
+    
     Future.microtask(() {
-      context.read<InventoryProvider>().loadProducts();
+      final inventory = context.read<InventoryProvider>();
+      if (inventory.allProducts.isEmpty) {
+        inventory.loadProducts();
+      }
     });
   }
 
@@ -126,10 +138,18 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
               backgroundColor: AppColors.secondary,
             ),
           );
-          Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const MainShell()),
-            (route) => false,
-          );
+          
+          // Refresh inventory to reflect decreased quantities
+          context.read<InventoryProvider>().loadProducts();
+
+          if (widget.isOnboarding) {
+            Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const MainShell()),
+              (route) => false,
+            );
+          } else {
+            Navigator.pop(context);
+          }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -172,25 +192,27 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                children: List.generate(
-                    3,
-                    (i) => Expanded(
-                          child: Container(
-                            height: 8,
-                            margin: EdgeInsets.only(right: i < 2 ? 8 : 0),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(4),
-                              color: i <= 2
-                                  ? AppColors.secondary
-                                  : AppColors.primary,
+              if (widget.isOnboarding) ...[
+                Row(
+                  children: List.generate(
+                      3,
+                      (i) => Expanded(
+                            child: Container(
+                              height: 8,
+                              margin: EdgeInsets.only(right: i < 2 ? 8 : 0),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(4),
+                                color: i <= 2
+                                    ? AppColors.secondary
+                                    : AppColors.primary,
+                              ),
                             ),
-                          ),
-                        )),
-              ),
-              const SizedBox(height: 32),
-              const Text(
-                'Daily sales report',
+                          )),
+                ),
+                const SizedBox(height: 32),
+              ],
+              Text(
+                widget.initialProduct != null ? 'Add daily sales' : 'Daily sales report',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 32),
@@ -258,28 +280,28 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
                 const Text('Product name',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
-                Consumer<InventoryProvider>(
-                  builder: (context, inventory, _) {
-                    final products = inventory.allProducts;
-                    return DropdownButtonFormField<ProductModel>(
-                      value: entry.selectedProduct,
-                      isExpanded: true,
-                      decoration: _inputDecoration('Select product', isFocused: false),
-                      items: products.map((p) {
-                        return DropdownMenuItem(value: p, child: Text(p.name));
-                      }).toList(),
-                      onChanged: (val) {
-                        if (val != null) {
-                          setState(() {
-                            entry.selectedProduct = val;
-                            entry.productType = val.category;
-                            entry.unit = val.unit;
-                          });
-                        }
-                      },
-                    );
-                  },
-                ),
+                  Consumer<InventoryProvider>(
+                    builder: (context, inventory, _) {
+                      final products = inventory.allProducts;
+                      return DropdownButtonFormField<ProductModel>(
+                        value: entry.selectedProduct,
+                        isExpanded: true,
+                        decoration: _inputDecoration('Select product', isFocused: false),
+                        items: products.map((p) {
+                          return DropdownMenuItem(value: p, child: Text(p.name));
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() {
+                              entry.selectedProduct = val;
+                              entry.productType = val.category;
+                              entry.unit = val.unit;
+                            });
+                          }
+                        },
+                      );
+                    },
+                  ),
                 const SizedBox(height: 16),
 
                 Row(
@@ -293,22 +315,22 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
                               style: TextStyle(
                                   fontSize: 14, fontWeight: FontWeight.w600)),
                           const SizedBox(height: 8),
-                          DropdownButtonFormField<ProductCategory>(
-                            value: entry.productType,
-                            isExpanded: true,
-                            decoration: _inputDecoration('Select type', isFocused: false),
-                            items: ProductCategory.values.map((cat) {
-                              return DropdownMenuItem(
-                                  value: cat,
-                                  child: Text(cat.name[0].toUpperCase() +
-                                      cat.name.substring(1)));
-                            }).toList(),
-                            onChanged: (val) {
-                              if (val != null) {
-                                setState(() => entry.productType = val);
-                              }
-                            },
-                          ),
+                            DropdownButtonFormField<ProductCategory>(
+                              value: entry.productType,
+                              isExpanded: true,
+                              decoration: _inputDecoration('Select type', isFocused: false),
+                              items: ProductCategory.values.map((cat) {
+                                return DropdownMenuItem(
+                                    value: cat,
+                                    child: Text(cat.name[0].toUpperCase() +
+                                        cat.name.substring(1)));
+                              }).toList(),
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setState(() => entry.productType = val);
+                                }
+                              },
+                            ),
                         ],
                       ),
                     ),
@@ -344,16 +366,16 @@ class _DailySalesReportScreenState extends State<DailySalesReportScreen> {
                               style: TextStyle(
                                   fontSize: 14, fontWeight: FontWeight.w600)),
                           const SizedBox(height: 8),
-                          DropdownButtonFormField<ProductUnit>(
-                            value: entry.unit,
-                            isExpanded: true,
-                            decoration: _inputDecoration('Select unit', isFocused: false),
-                            items: ProductUnit.values.map((u) {
-                              return DropdownMenuItem(
-                                  value: u, child: Text(u.name.toUpperCase()));
-                            }).toList(),
-                            onChanged: (val) => setState(() => entry.unit = val),
-                          ),
+                            DropdownButtonFormField<ProductUnit>(
+                              value: entry.unit,
+                              isExpanded: true,
+                              decoration: _inputDecoration('Select unit', isFocused: false),
+                              items: ProductUnit.values.map((u) {
+                                return DropdownMenuItem(
+                                    value: u, child: Text(u.name.toUpperCase()));
+                              }).toList(),
+                              onChanged: (val) => setState(() => entry.unit = val),
+                            ),
                         ],
                       ),
                     ),
@@ -487,7 +509,11 @@ class _SalesEntry {
   final TextEditingController quantitySoldController = TextEditingController();
   final TextEditingController stockLeftController = TextEditingController();
 
-  _SalesEntry() : productionDate = DateTime.now();
+  _SalesEntry({ProductModel? initialProduct}) 
+      : productionDate = DateTime.now(),
+        selectedProduct = initialProduct,
+        productType = initialProduct?.category ?? ProductCategory.others,
+        unit = initialProduct?.unit;
 
   void dispose() {
     quantitySoldController.dispose();

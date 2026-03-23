@@ -79,7 +79,7 @@ class ProductDetailScreen extends StatelessWidget {
             
             _DetailRow(
               label: 'Shelf life',
-              value: '${product.shelfLife} days',
+              value: '${product.shelfLifeDays} days',
             ),
             const SizedBox(height: 16),
             

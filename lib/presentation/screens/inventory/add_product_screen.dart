@@ -7,7 +7,8 @@ import 'package:prepal2/presentation/widgets/shared_button.dart';
 import 'package:prepal2/presentation/screens/sales/daily_sales_report_screen.dart';
 
 class AddProductScreen extends StatefulWidget {
-  const AddProductScreen({super.key});
+  final bool isOnboarding;
+  const AddProductScreen({super.key, this.isOnboarding = false});
 
   @override
   State<AddProductScreen> createState() => _AddProductScreenState();
@@ -65,6 +66,20 @@ class _AddProductScreenState extends State<AddProductScreen> {
         _productionDate = picked;
       });
     }
+  }
+
+  void _clearForm() {
+    _nameController.clear();
+    _quantityController.clear();
+    _thresholdController.clear();
+    _priceController.clear();
+    // Reset defaults
+    setState(() {
+      _selectedCategory = ProductCategory.others;
+      _selectedUnit = ProductUnit.pcs;
+      _productionDate = DateTime.now();
+      _shelfLifeController.text = '168';
+    });
   }
 
   Future<void> _handleSubmit({bool isSubmit = true}) async {
@@ -128,11 +143,23 @@ class _AddProductScreenState extends State<AddProductScreen> {
           backgroundColor: Colors.green,
         ),
       );
+      
       if (isSubmit) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const DailySalesReportScreen()),
-        );
+        if (widget.isOnboarding) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const DailySalesReportScreen(
+                isOnboarding: true,
+              ),
+            ),
+          );
+        } else {
+          Navigator.pop(context);
+        }
+      } else {
+        // "Save" or "Add another" was clicked. Clear form for next entry.
+        _clearForm();
       }
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -167,23 +194,25 @@ class _AddProductScreenState extends State<AddProductScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Progress bar (3 steps total)
-                Row(
-                  children: List.generate(
-                      3,
-                      (i) => Expanded(
-                            child: Container(
-                              height: 4,
-                              margin: EdgeInsets.only(right: i < 2 ? 8 : 0),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(2),
-                                color: i <= 2
-                                    ? AppColors.secondary
-                                    : AppColors.primary.withValues(alpha: 0.3),
+                if (widget.isOnboarding) ...[
+                  Row(
+                    children: List.generate(
+                        3,
+                        (i) => Expanded(
+                              child: Container(
+                                height: 4,
+                                margin: EdgeInsets.only(right: i < 2 ? 8 : 0),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(2),
+                                  color: i <= 1
+                                      ? AppColors.secondary
+                                      : AppColors.primary.withValues(alpha: 0.3),
+                                ),
                               ),
-                            ),
-                          )),
-                ),
-                const SizedBox(height: 32),
+                            )),
+                  ),
+                  const SizedBox(height: 32),
+                ],
 
                 const Text(
                   'Inventory details',
@@ -358,44 +387,60 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
                 const SizedBox(height: 32),
 
-                // Add another product button
-                PrimaryButton(
-                  text: 'Add another product',
-                  type: ButtonType.secondary,
-                  icon: Icons.add_circle_outline,
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      // Logic to save current and clear fields
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Product queued')));
-                    }
-                  },
-                ),
-
-                const SizedBox(height: 24),
-
-                // Save & Submit Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: PrimaryButton(
-                        text: 'Save',
+                // Action Buttons
+                if (widget.isOnboarding)
+                  Column(
+                    children: [
+                      PrimaryButton(
+                        text: 'Add another product',
                         type: ButtonType.secondary,
+                        icon: Icons.add_circle_outline,
                         onPressed: () => _handleSubmit(isSubmit: false),
                         isLoading: _isSaving,
                       ),
-                    ),
-                    const SizedBox(width: 60),
-                    Expanded(
-                      child: PrimaryButton(
-                        text: 'Submit',
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: PrimaryButton(
+                              text: 'Save',
+                              type: ButtonType.secondary,
+                              onPressed: () => _handleSubmit(isSubmit: false),
+                              isLoading: _isSaving,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: PrimaryButton(
+                              text: 'Next',
+                              type: ButtonType.primary,
+                              onPressed: () => _handleSubmit(isSubmit: true),
+                              isLoading: _isSubmitLoading,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
+                else
+                  Column(
+                    children: [
+                      PrimaryButton(
+                        text: 'Add another product',
+                        type: ButtonType.secondary,
+                        icon: Icons.add_circle_outline,
+                        onPressed: () => _handleSubmit(isSubmit: false),
+                        isLoading: _isSaving,
+                      ),
+                      const SizedBox(height: 16),
+                      PrimaryButton(
+                        text: 'Save product',
                         type: ButtonType.primary,
                         onPressed: () => _handleSubmit(isSubmit: true),
                         isLoading: _isSubmitLoading,
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
                 const SizedBox(height: 24),
               ],
             ),
